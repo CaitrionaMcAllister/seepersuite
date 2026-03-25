@@ -4,6 +4,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark mode (default) */
+:root {
+  --color-bg: #0d0d0d;
+  --color-surface: #1a1a1a;
+  --color-raised: #242424;
+  --color-border: #333333;
+  --color-text: #f0f0f0;
+  --color-subtext: #aaaaaa;
+  --color-muted: #555555;
+
+  /* Section colours */
+  --color-news: #ED693A;
+  --color-wiki: #B0A9CF;
+  --color-tools: #DCFEAD;
+  --color-resources: #8ACB8F;
+  --color-prompts: #EDDE5C;
+  --color-inside: #D4537E;
+  --color-us: #1D9E75;
+  --color-labs: #7F77DD;
+  --color-dashboard: #ED693A;
+}
+
+/* Light mode */
+html.light {
+  --color-bg: #f5f5f3;
+  --color-surface: #ffffff;
+  --color-raised: #f0ede8;
+  --color-border: #dddddd;
+  --color-text: #111111;
+  --color-subtext: #555555;
+  --color-muted: #999999;
+}
+
+/* Theme transition */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
 @layer base {
   body {
     @apply bg-seeper-bg text-seeper-white font-body;
@@ -43,4 +81,38 @@
     display: flex;
     width: max-content;
   }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: fadeInUp 0.25s ease;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+    var(--color-surface) 25%,
+    var(--color-raised)  50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes upvotePop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.upvote-pop { animation: upvotePop 0.3s ease; }
+
+@keyframes slideInFromBottom {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

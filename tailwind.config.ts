@@ -25,6 +25,25 @@ const config: Config = {
         fern:    { DEFAULT: '#8ACB8F' },
         circuit: { DEFAULT: '#DCFEAD' },
         mossy:   { DEFAULT: '#DDDDCE' },
+
+        // CSS var aliases — update with theme
+        bg:      'var(--color-bg)',
+        surface: 'var(--color-surface)',
+        raised:  'var(--color-raised)',
+        text:    'var(--color-text)',
+        subtext: 'var(--color-subtext)',
+        muted:   'var(--color-muted)',
+
+        // Section colours
+        'section-news':      'var(--color-news)',
+        'section-wiki':      'var(--color-wiki)',
+        'section-tools':     'var(--color-tools)',
+        'section-resources': 'var(--color-resources)',
+        'section-prompts':   'var(--color-prompts)',
+        'section-inside':    'var(--color-inside)',
+        'section-us':        'var(--color-us)',
+        'section-labs':      'var(--color-labs)',
+        'section-dashboard': 'var(--color-dashboard)',
       },
       fontFamily: {
         display: ['DM Sans', 'sans-serif'],
