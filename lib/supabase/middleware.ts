@@ -32,9 +32,10 @@ export async function updateSession(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Redirect unauthenticated users to /auth.
-  // Use startsWith('/auth') not === '/auth' so that /auth/callback is
-  // also excluded — otherwise the magic link code exchange is interrupted
-  // before the session can be established.
+  // Primary protection: the matcher in root middleware.ts excludes all /auth/*
+  // paths, so this function never runs for the login page or callback route.
+  // The startsWith('/auth') check here is defence-in-depth — it handles any
+  // future case where the matcher is narrowed and /auth/callback passes through.
   if (!user && !pathname.startsWith('/auth')) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
