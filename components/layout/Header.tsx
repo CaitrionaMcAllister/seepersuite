@@ -18,7 +18,7 @@ export default function Header({ profile }: HeaderProps) {
   const dateString = useMemo(() => formatDate(new Date()), [])
 
   return (
-    <header className="sticky top-0 z-30 bg-seeper-bg/95 backdrop-blur-sm border-b border-seeper-border/40">
+    <header className="sticky top-0 z-30 bg-seeper-bg/95 backdrop-blur-sm">
       <div
         className="flex items-center justify-between px-8 py-4"
         style={{ borderBottom: '1px solid rgba(237,105,58,0.4)' }}

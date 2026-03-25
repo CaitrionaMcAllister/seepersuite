@@ -17,8 +17,8 @@ export default function AppShell({ profile, children }: AppShellProps) {
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push('/auth')
     router.refresh()
+    router.push('/auth')
   }
 
   return (
