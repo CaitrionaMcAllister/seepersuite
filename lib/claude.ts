@@ -1,5 +1,6 @@
+import 'server-only'
 // Claude API helpers — all functions are server-side only.
-// Never import this module in client components.
+// The server-only import above enforces this at build time.
 //
 // Called from:
 //   - generateDailyDigest: app/dashboard/page.tsx (direct server call) + app/api/digest/route.ts

@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils'
-import { getInitials } from '@/lib/utils'
+import Image from 'next/image'
+import { cn, getInitials } from '@/lib/utils'
 
 interface AvatarProps {
   src?: string | null
@@ -14,12 +14,15 @@ export default function Avatar({ src, name, size = 40, className }: AvatarProps)
 
   if (src) {
     return (
-      <img
-        src={src}
-        alt={name ?? 'avatar'}
-        style={style}
-        className={cn('rounded-full object-cover', className)}
-      />
+      <div style={style} className={cn('rounded-full overflow-hidden flex-shrink-0 relative', className)}>
+        <Image
+          src={src}
+          alt={name ?? 'avatar'}
+          fill
+          sizes={`${size}px`}
+          className="object-cover"
+        />
+      </div>
     )
   }
 
