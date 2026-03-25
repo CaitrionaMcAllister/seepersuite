@@ -11,6 +11,7 @@ export interface RssItem {
 }
 
 /** Fetch and parse an RSS feed URL — stub for Phase 2 */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function fetchFeed(_url: string): Promise<RssItem[]> {
   // TODO (Phase 2): implement with a parser like 'rss-parser'
   return []
