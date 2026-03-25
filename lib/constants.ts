@@ -33,40 +33,45 @@ export const DEPARTMENTS = [
 // Navigation config — icon strings are Lucide icon names
 export const NAV_SECTIONS: NavSection[] = [
   {
-    title: 'MAIN',
+    label: 'DISCOVER',
     items: [
-      { label: 'Dashboard',        href: '/dashboard',   icon: 'LayoutDashboard' },
-      { label: SECTION_NAMES.news, href: '/news',        icon: 'Newspaper' },
-      { label: SECTION_NAMES.wiki, href: '/wiki',        icon: 'BookOpen' },
+      { label: 'Dashboard',          href: '/dashboard', icon: 'Home',       color: '#ED693A' },
+      { label: SECTION_NAMES.news,   href: '/news',      icon: 'Radio',      color: '#ED693A' },
+      { label: SECTION_NAMES.wiki,   href: '/wiki',      icon: 'BookOpen',   color: '#B0A9CF' },
     ],
   },
   {
-    title: 'STUDIO',
+    label: 'STUDIO',
     items: [
-      { label: SECTION_NAMES.prompts,    href: '/prompts',    icon: 'Sparkles' },
-      { label: SECTION_NAMES.newsletter, href: '/newsletter', icon: 'Mail' },
-      { label: SECTION_NAMES.tools,      href: '/tools',      icon: 'Wrench' },
-      { label: SECTION_NAMES.resources,  href: '/resources',  icon: 'FolderOpen' },
+      { label: SECTION_NAMES.tools,      href: '/tools',     icon: 'Settings2',  color: '#DCFEAD' },
+      { label: SECTION_NAMES.resources,  href: '/resources', icon: 'LayoutGrid', color: '#8ACB8F' },
+      { label: SECTION_NAMES.prompts,    href: '/prompts',   icon: 'Sparkles',   color: '#EDDE5C' },
     ],
   },
   {
-    title: 'TEAM',
+    label: 'TEAM',
     items: [
-      { label: SECTION_NAMES.team, href: '/team', icon: 'Users' },
-      { label: SECTION_NAMES.labs, href: '/labs', icon: 'FlaskConical' },
-      { label: 'Admin', href: '/admin', icon: 'Settings', adminOnly: true },
+      { label: 'seeInside',        href: '/inside', icon: 'Star',         color: '#D4537E' },
+      { label: SECTION_NAMES.team, href: '/team',   icon: 'Users',        color: '#1D9E75' },
+      { label: SECTION_NAMES.labs, href: '/labs',   icon: 'FlaskConical', color: '#7F77DD' },
+    ],
+  },
+  {
+    label: '',
+    divider: true,
+    items: [
+      { label: 'Admin', href: '/admin', icon: 'Shield', color: '#ED693A', adminOnly: true },
     ],
   },
 ]
 
 // Quick links for dashboard tiles — each with a jewel tone accent
 export const QUICK_LINKS: readonly QuickLink[] = [
-  { label: SECTION_NAMES.news,       href: '/news',        icon: 'Newspaper',  accent: 'bg-plasma' },
-  { label: SECTION_NAMES.wiki,       href: '/wiki',        icon: 'BookOpen',   accent: 'bg-quantum' },
-  { label: SECTION_NAMES.prompts,    href: '/prompts',     icon: 'Sparkles',   accent: 'bg-volt' },
-  { label: SECTION_NAMES.newsletter, href: '/newsletter',  icon: 'Mail',       accent: 'bg-fern' },
-  { label: SECTION_NAMES.tools,      href: '/tools',       icon: 'Wrench',     accent: 'bg-circuit' },
-  { label: SECTION_NAMES.resources,  href: '/resources',   icon: 'FolderOpen', accent: 'bg-mossy' },
+  { label: SECTION_NAMES.news,      href: '/news',      icon: 'Radio',      accent: 'bg-plasma' },
+  { label: SECTION_NAMES.wiki,      href: '/wiki',      icon: 'BookOpen',   accent: 'bg-quantum' },
+  { label: SECTION_NAMES.prompts,   href: '/prompts',   icon: 'Sparkles',   accent: 'bg-volt' },
+  { label: SECTION_NAMES.tools,     href: '/tools',     icon: 'Settings2',  accent: 'bg-circuit' },
+  { label: SECTION_NAMES.resources, href: '/resources', icon: 'LayoutGrid', accent: 'bg-mossy' },
 ]
 
 // Mock ticker headlines for Phase 1 (replaced by live RSS in Phase 2)

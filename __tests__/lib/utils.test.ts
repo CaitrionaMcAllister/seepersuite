@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { cn, getGreeting, formatDate, getInitials } from '@/lib/utils'
+import { cn, getGreeting, formatDate, getInitials, relativeTime } from '@/lib/utils'
 
 describe('cn', () => {
   it('merges class strings', () => {
@@ -59,5 +59,24 @@ describe('formatDate', () => {
     const result = formatDate('2026-03-25')
     expect(result).toContain('2026')
     expect(result).toContain('March')
+  })
+})
+
+describe('relativeTime', () => {
+  it('returns "just now" for < 1 minute', () => {
+    const recent = new Date(Date.now() - 30000).toISOString()
+    expect(relativeTime(recent)).toBe('just now')
+  })
+  it('returns minutes ago', () => {
+    const fiveMin = new Date(Date.now() - 5 * 60000).toISOString()
+    expect(relativeTime(fiveMin)).toBe('5m ago')
+  })
+  it('returns hours ago', () => {
+    const twoHours = new Date(Date.now() - 2 * 3600000).toISOString()
+    expect(relativeTime(twoHours)).toBe('2h ago')
+  })
+  it('returns days ago', () => {
+    const threeDays = new Date(Date.now() - 3 * 86400000).toISOString()
+    expect(relativeTime(threeDays)).toBe('3d ago')
   })
 })

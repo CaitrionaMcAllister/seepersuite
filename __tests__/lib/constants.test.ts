@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { NAV_SECTIONS, CATEGORIES, DEPARTMENTS } from '@/lib/constants'
 
 describe('NAV_SECTIONS', () => {
-  it('contains three top-level sections', () => {
-    expect(NAV_SECTIONS).toHaveLength(3)
+  it('contains four top-level sections', () => {
+    expect(NAV_SECTIONS).toHaveLength(4)
   })
 
   it('all nav items have required fields', () => {
@@ -12,6 +12,7 @@ describe('NAV_SECTIONS', () => {
         expect(item).toHaveProperty('label')
         expect(item).toHaveProperty('href')
         expect(item).toHaveProperty('icon')
+        expect(item).toHaveProperty('color')
       })
     })
   })

@@ -99,11 +99,13 @@ export interface NavItem {
   label: string
   href: string
   icon: string // Lucide icon name
+  color: string
   adminOnly?: boolean
 }
 
 export interface NavSection {
-  title: string
+  label: string
+  divider?: boolean
   items: NavItem[]
 }
 

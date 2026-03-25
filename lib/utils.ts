@@ -32,3 +32,15 @@ export function getInitials(name: string): string {
   if (parts.length === 1) return parts[0][0].toUpperCase()
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
 }
+
+/** Return a human-readable relative time string from an ISO date string */
+export function relativeTime(isoString: string): string {
+  const diff = Date.now() - new Date(isoString).getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+  if (minutes < 1)  return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24)   return `${hours}h ago`
+  return `${days}d ago`
+}
