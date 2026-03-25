@@ -32,13 +32,15 @@
 }
 
 /* News ticker scroll animation */
-@keyframes ticker-scroll {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
+@layer utilities {
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
 
-.ticker-track {
-  animation: ticker-scroll 40s linear infinite;
-  display: flex;
-  width: max-content;
+  .ticker-track {
+    animation: ticker-scroll 40s linear infinite;
+    display: flex;
+    width: max-content;
+  }
 }
