@@ -106,3 +106,27 @@ export interface NavSection {
   title: string
   items: NavItem[]
 }
+
+export interface QuickLink {
+  label: string
+  href: string
+  icon: string
+  accent: string // Tailwind bg class e.g. 'bg-plasma'
+}
+
+export interface MockActivityItem {
+  initials: string
+  name: string
+  action: string
+  title: string
+  time: string
+  dept: Department
+}
+
+export interface MockWikiUpdate {
+  initials: string
+  title: string
+  category: WikiCategory
+  author: string
+  time: string
+}

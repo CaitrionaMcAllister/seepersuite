@@ -1,4 +1,4 @@
-import type { NavSection } from '@/types'
+import type { NavSection, QuickLink, MockActivityItem, MockWikiUpdate } from '@/types'
 
 // seeper division naming — see[X] convention
 export const SECTION_NAMES = {
@@ -60,14 +60,14 @@ export const NAV_SECTIONS: NavSection[] = [
 ]
 
 // Quick links for dashboard tiles — each with a jewel tone accent
-export const QUICK_LINKS = [
+export const QUICK_LINKS: readonly QuickLink[] = [
   { label: SECTION_NAMES.news,       href: '/news',        icon: 'Newspaper',  accent: 'bg-plasma' },
   { label: SECTION_NAMES.wiki,       href: '/wiki',        icon: 'BookOpen',   accent: 'bg-quantum' },
   { label: SECTION_NAMES.prompts,    href: '/prompts',     icon: 'Sparkles',   accent: 'bg-volt' },
   { label: SECTION_NAMES.newsletter, href: '/newsletter',  icon: 'Mail',       accent: 'bg-fern' },
   { label: SECTION_NAMES.tools,      href: '/tools',       icon: 'Wrench',     accent: 'bg-circuit' },
   { label: SECTION_NAMES.resources,  href: '/resources',   icon: 'FolderOpen', accent: 'bg-mossy' },
-] as const
+]
 
 // Mock ticker headlines for Phase 1 (replaced by live RSS in Phase 2)
 export const MOCK_TICKER_HEADLINES = [
@@ -84,7 +84,7 @@ export const MOCK_TICKER_HEADLINES = [
 ] as const
 
 // Mock activity feed for Phase 1
-export const MOCK_ACTIVITY = [
+export const MOCK_ACTIVITY: readonly MockActivityItem[] = [
   { initials: 'AJ', name: 'Alex J', action: 'created wiki page', title: 'Unreal Engine Lighting Guide', time: '2 min ago', dept: 'tech' },
   { initials: 'SC', name: 'Sarah C', action: 'published newsletter', title: 'Issue 12 — March Edition', time: '1 hr ago', dept: 'creative' },
   { initials: 'MK', name: 'Marcus K', action: 'added prompt', title: 'Midjourney Architectural Render', time: '3 hr ago', dept: 'creative' },
@@ -93,16 +93,16 @@ export const MOCK_ACTIVITY = [
   { initials: 'NP', name: 'Nadia P', action: 'added prompt', title: 'ChatGPT Proposal Template', time: 'Yesterday', dept: 'business' },
   { initials: 'JW', name: 'Jamie W', action: 'edited wiki page', title: 'Health & Safety Checklist', time: '2 days ago', dept: 'operations' },
   { initials: 'EC', name: 'Emma C', action: 'created wiki page', title: 'Brand Guidelines 2026', time: '2 days ago', dept: 'creative' },
-] as const
+]
 
 // Mock wiki updates for Phase 1
-export const MOCK_WIKI_UPDATES = [
+export const MOCK_WIKI_UPDATES: readonly MockWikiUpdate[] = [
   { initials: 'AJ', title: 'Unreal Engine Lighting Guide', category: 'tech', author: 'Alex J', time: '2 min ago' },
   { initials: 'LT', title: 'Production Pipeline Overview', category: 'production', author: 'Laura T', time: '5 hr ago' },
   { initials: 'EC', title: 'Brand Guidelines 2026', category: 'creative', author: 'Emma C', time: '2 days ago' },
   { initials: 'RB', title: 'AWS Cost Optimisation Notes', category: 'tech', author: 'Ryan B', time: 'Yesterday' },
   { initials: 'SC', title: 'Client Presentation Framework', category: 'business', author: 'Sarah C', time: '3 days ago' },
-] as const
+]
 
 // Mock newsletter for Phase 1
 export const MOCK_NEWSLETTER = {
