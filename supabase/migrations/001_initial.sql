@@ -2,26 +2,9 @@
 -- Run this via the Supabase dashboard SQL editor or Supabase CLI
 
 -- ============================================================
--- HELPER FUNCTION: is_admin()
--- Used in RLS policies to avoid infinite recursion.
--- Reads profiles.role for the current authenticated user.
--- ============================================================
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-STABLE
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM profiles
-    WHERE id = auth.uid() AND role = 'admin'
-  );
-$$;
-
--- ============================================================
 -- TABLE: profiles
 -- Extends auth.users with seeper-specific fields.
+-- Must be created before is_admin() which references it.
 -- ============================================================
 CREATE TABLE profiles (
   id           UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
@@ -50,6 +33,24 @@ $$;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE handle_new_user();
+
+-- ============================================================
+-- HELPER FUNCTION: is_admin()
+-- Used in RLS policies to avoid infinite recursion.
+-- Defined after profiles table so the reference resolves.
+-- ============================================================
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+$$;
 
 -- ============================================================
 -- TABLE: wiki_pages
