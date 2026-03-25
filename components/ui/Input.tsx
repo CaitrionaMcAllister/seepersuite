@@ -18,6 +18,8 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         <input
           ref={ref}
           id={id}
+          aria-describedby={id && error ? `${id}-error` : undefined}
+          aria-invalid={!!error}
           className={cn(
             'w-full bg-seeper-raised border border-seeper-border rounded-xl px-4 py-3',
             'font-body text-seeper-white placeholder:text-seeper-muted',
@@ -28,7 +30,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-xs text-red-400 font-body">{error}</p>}
+        {error && <p id={id ? `${id}-error` : undefined} className="text-xs text-red-400 font-body">{error}</p>}
       </div>
     )
   }

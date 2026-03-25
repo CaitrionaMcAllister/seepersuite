@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,8 @@ interface ModalProps {
 }
 
 export default function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -20,6 +22,13 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [onClose])
+
+  // Move focus into panel on open
+  useEffect(() => {
+    if (isOpen) {
+      panelRef.current?.focus()
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -32,10 +41,17 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
         aria-hidden="true"
       />
       {/* Panel */}
-      <div className={cn('relative seeper-card-raised shadow-card w-full max-w-lg p-6', className)}>
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'modal-title' : undefined}
+        tabIndex={-1}
+        className={cn('relative seeper-card-raised shadow-card w-full max-w-lg p-6', className)}
+      >
         <div className="flex items-center justify-between mb-4">
           {title && (
-            <h2 className="font-display font-semibold text-seeper-white text-lg">{title}</h2>
+            <h2 id="modal-title" className="font-display font-semibold text-seeper-white text-lg">{title}</h2>
           )}
           <button
             onClick={onClose}

@@ -13,6 +13,7 @@ export default function LoadingSpinner({ size = 24, className }: LoadingSpinnerP
       viewBox="0 0 24 24"
       fill="none"
       className={cn('animate-spin text-plasma', className)}
+      role="status"
       aria-label="Loading"
     >
       <circle
