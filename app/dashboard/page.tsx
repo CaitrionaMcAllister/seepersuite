@@ -30,9 +30,12 @@ async function getTodaysDigest(): Promise<string> {
 
   // Write uses service-role client — daily_digest has no authenticated INSERT policy.
   const serviceClient = createServiceClient()
-  await serviceClient
+  const { error: upsertError } = await serviceClient
     .from('daily_digest')
     .upsert({ content, date: today }, { onConflict: 'date' })
+  if (upsertError) {
+    console.error('[digest] Failed to cache digest:', upsertError.message)
+  }
 
   return content
 }
