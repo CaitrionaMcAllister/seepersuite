@@ -1,27 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-seeper-bg text-seeper-white font-body;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .seeper-card {
+    @apply bg-seeper-surface border border-seeper-border rounded-2xl;
+  }
+  .seeper-card-raised {
+    @apply bg-seeper-raised border border-seeper-border rounded-2xl;
+  }
+  .pill-tag {
+    @apply rounded-full px-3 py-1 text-xs font-medium font-display;
+  }
+  .glow-on-hover {
+    @apply transition-shadow duration-200 hover:shadow-glow-orange;
+  }
+  .section-label {
+    @apply text-xs font-display font-semibold tracking-widest uppercase text-seeper-muted;
+  }
+  .heading-display {
+    @apply font-display font-bold text-seeper-white;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* News ticker scroll animation */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  animation: ticker-scroll 40s linear infinite;
+  display: flex;
+  width: max-content;
 }
