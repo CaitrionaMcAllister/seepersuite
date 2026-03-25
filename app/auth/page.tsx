@@ -38,13 +38,11 @@ export default function AuthPage() {
     <div className="min-h-screen bg-seeper-bg flex items-center justify-center p-4 relative overflow-hidden">
       {/* Decorative blurred circles */}
       <div
-        className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(237,105,58,0.08)' }}
+        className="absolute -top-32 -left-32 w-96 h-96 rounded-full blur-3xl pointer-events-none bg-plasma/[0.08]"
         aria-hidden="true"
       />
       <div
-        className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-        style={{ background: 'rgba(176,169,207,0.08)' }}
+        className="absolute -bottom-32 -right-32 w-96 h-96 rounded-full blur-3xl pointer-events-none bg-quantum/[0.08]"
         aria-hidden="true"
       />
 
