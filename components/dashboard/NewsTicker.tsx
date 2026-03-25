@@ -5,7 +5,7 @@ export default function NewsTicker() {
   const items = [...MOCK_TICKER_HEADLINES, ...MOCK_TICKER_HEADLINES]
 
   return (
-    <div className="h-10 bg-seeper-black border-t border-seeper-border overflow-hidden flex items-center">
+    <div className="h-10 bg-seeper-black border-t border-seeper-border overflow-hidden flex items-center" aria-hidden="true">
       <div className="ticker-track">
         {items.map((headline, i) => (
           <span key={i} className="flex items-center gap-3 pr-8">

@@ -9,7 +9,7 @@ export default function ActivityFeed() {
       <div className="flex flex-col gap-3">
         {MOCK_ACTIVITY.map((item, i) => (
           <div
-            key={i}
+            key={`${item.name}-${i}`}
             className={`flex items-start gap-3 pl-3 border-l-2 ${i === 0 ? 'border-plasma' : 'border-seeper-border'}`}
           >
             <Avatar name={item.initials} size={28} className="flex-shrink-0 mt-0.5" />

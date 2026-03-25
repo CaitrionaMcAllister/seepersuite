@@ -27,11 +27,11 @@ export default function WikiUpdates() {
       </div>
 
       <div className="flex flex-col divide-y divide-seeper-border">
-        {MOCK_WIKI_UPDATES.map((item, i) => {
+        {MOCK_WIKI_UPDATES.map((item) => {
           const style = CATEGORY_STYLES[item.category] ?? CATEGORY_STYLES.general
           return (
             <div
-              key={i}
+              key={item.title}
               className="flex items-center gap-3 py-3 rounded-lg hover:bg-seeper-raised px-2 -mx-2 transition-colors cursor-pointer"
             >
               <Avatar name={item.initials} size={32} />
