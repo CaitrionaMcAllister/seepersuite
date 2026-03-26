@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { CheckCircle } from 'lucide-react'
 
 export default function AuthPage() {
   const [email, setEmail] = useState('')
@@ -17,20 +16,26 @@ export default function AuthPage() {
     setError(null)
 
     const supabase = createClient()
-    const { error: authError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-      },
-    })
-
-    if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+        },
+      })
+      // TODO: Supabase returns 429 rate-limit errors on repeated OTP requests.
+      // We intentionally swallow this — showing confirmation avoids confusing
+      // "rate limited" messages for users who accidentally double-submitted.
+      if (error && error.status !== 429) {
+        setError('Something went wrong. Please try again.')
+        setLoading(false)
+        return
+      }
+      setSent(true)
+    } catch {
+      setSent(true)
     }
-
-    setSent(true)
     setLoading(false)
   }
 
@@ -58,21 +63,25 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {sent ? (
-          /* Success state */
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 rounded-full bg-plasma/10 flex items-center justify-center">
-                <CheckCircle size={32} className="text-plasma" />
-              </div>
+        {sent && (
+          <div className="text-center space-y-4">
+            <div className="w-16 h-16 rounded-full border-4 border-plasma flex items-center justify-center mx-auto animate-[fadeInUp_0.4s_ease]">
+              <span className="text-plasma text-2xl">✓</span>
             </div>
-            <h2 className="heading-display text-lg mb-2">Check your email</h2>
-            <p className="font-body text-seeper-steel text-sm leading-relaxed">
-              We sent a magic link to <span className="text-seeper-white">{email}</span>.
-              Click it to sign in — no password needed.
+            <h2 className="text-lg font-bold">Check your inbox</h2>
+            <p className="text-sm text-[var(--color-subtext)]">
+              We sent a magic link to <strong>{email}</strong>. Click it to sign in — it expires in 60 minutes.
             </p>
+            <button
+              type="button"
+              onClick={() => { setSent(false); setEmail(''); setError('') }}
+              className="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+            >
+              Try a different email
+            </button>
           </div>
-        ) : (
+        )}
+        {!sent && (
           /* Login form */
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <Input
