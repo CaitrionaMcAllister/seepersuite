@@ -2,15 +2,15 @@ import type { NavSection, QuickLink, MockActivityItem, MockWikiUpdate } from '@/
 
 // seeper division naming — see[X] convention
 export const SECTION_NAMES = {
-  news:       'seeNews',
-  wiki:       'seeWiki',
-  prompts:    'seePrompts',
-  newsletter: 'seeNewsletter',
-  tools:      'seeTools',
-  resources:  'seeResources',
-  team:       'seeUs',
-  labs:       'seeLabs',
-  insights:   'seeInsights',
+  news:      'seeNews',
+  wiki:      'seeWiki',
+  prompts:   'seePrompts',
+  tools:     'seeTools',
+  resources: 'seeResources',
+  team:      'seeUs',
+  labs:      'seeLabs',
+  insights:  'seeInsights',
+  inside:    'seeInside',
 } as const
 
 export const CATEGORIES = [
@@ -51,7 +51,7 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: 'TEAM',
     items: [
-      { label: 'seeInside',        href: '/inside', icon: 'Star',         color: '#D4537E' },
+      { label: SECTION_NAMES.inside, href: '/inside', icon: 'Star',         color: '#D4537E' },
       { label: SECTION_NAMES.team, href: '/team',   icon: 'Users',        color: '#1D9E75' },
       { label: SECTION_NAMES.labs, href: '/labs',   icon: 'FlaskConical', color: '#7F77DD' },
     ],

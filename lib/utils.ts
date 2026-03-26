@@ -35,7 +35,10 @@ export function getInitials(name: string): string {
 
 /** Return a human-readable relative time string from an ISO date string */
 export function relativeTime(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime()
+  const ts = new Date(isoString).getTime()
+  if (isNaN(ts)) return '—'
+  const diff = Date.now() - ts
+  if (diff < 0) return 'just now'
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(diff / 3600000)
   const days = Math.floor(diff / 86400000)

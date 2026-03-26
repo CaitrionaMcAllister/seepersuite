@@ -79,4 +79,11 @@ describe('relativeTime', () => {
     const threeDays = new Date(Date.now() - 3 * 86400000).toISOString()
     expect(relativeTime(threeDays)).toBe('3d ago')
   })
+  it('returns "—" for invalid date string', () => {
+    expect(relativeTime('not-a-date')).toBe('—')
+  })
+  it('returns "just now" for future dates', () => {
+    const future = new Date(Date.now() + 60000).toISOString()
+    expect(relativeTime(future)).toBe('just now')
+  })
 })
