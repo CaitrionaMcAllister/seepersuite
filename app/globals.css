@@ -81,11 +81,11 @@ html.light {
     display: flex;
     width: max-content;
   }
-}
 
-@keyframes ticker {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  @keyframes ticker {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
 }
 
 @keyframes fadeInUp {

@@ -14,7 +14,7 @@ export function NewsTicker({ items = MOCK_TICKER_HEADLINES }: NewsTickerProps) {
       className="h-[34px] flex items-center overflow-hidden border-t border-seeper-border/40 bg-seeper-black"
       aria-hidden="true"
     >
-      <div className="ticker-inner flex items-center gap-0 whitespace-nowrap animate-[ticker_40s_linear_infinite] hover:[animation-play-state:paused]">
+      <div className="flex items-center gap-0 whitespace-nowrap animate-[ticker_40s_linear_infinite] hover:[animation-play-state:paused]">
         {doubled.map((item, i) => (
           <span key={i} className="flex items-center gap-4">
             <span className="text-xs text-seeper-steel px-4">{item}</span>
