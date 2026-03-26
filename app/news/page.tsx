@@ -1,22 +1,19 @@
 import AppShell from '@/components/layout/AppShell'
-import PlaceholderPage from '@/components/ui/PlaceholderPage'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/types'
+import { NewsPageClient } from './NewsPageClient'
 
 export default async function NewsPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth')
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await supabase
+    .from('profiles').select('*').eq('id', user.id).single()
 
   return (
     <AppShell profile={profile as Profile | null}>
-      <PlaceholderPage
-        sectionName="seeNews"
-        title="seeNews"
-        description="AI-curated news feed pulling the latest in immersive experiences, XR, AI, and creative technology — relevant to seeper's work."
-      />
+      <NewsPageClient />
     </AppShell>
   )
 }

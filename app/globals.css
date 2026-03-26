@@ -51,6 +51,10 @@ html.light {
 @layer components {
   .seeper-card {
     @apply bg-seeper-surface border border-seeper-border rounded-2xl;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .seeper-card:hover {
+    transform: translateY(-2px);
   }
   .seeper-card-raised {
     @apply bg-seeper-raised border border-seeper-border rounded-2xl;
@@ -70,6 +74,11 @@ html.light {
 }
 
 /* News ticker scroll animation */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 @layer utilities {
   @keyframes ticker-scroll {
     0%   { transform: translateX(0); }
@@ -80,11 +89,6 @@ html.light {
     animation: ticker-scroll 40s linear infinite;
     display: flex;
     width: max-content;
-  }
-
-  @keyframes ticker {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
   }
 }
 
@@ -120,4 +124,13 @@ html.light {
 @keyframes slideInFromBottom {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Modal open animation */
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.modal-enter {
+  animation: modalFadeIn 0.2s ease;
 }

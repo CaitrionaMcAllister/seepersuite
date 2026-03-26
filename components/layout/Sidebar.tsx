@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Home, Radio, BookOpen, Settings2, LayoutGrid, Sparkles,
   Star, Users, FlaskConical, Shield,
@@ -10,6 +10,7 @@ import {
 import { cn } from '@/lib/utils'
 import { NAV_SECTIONS } from '@/lib/constants'
 import Avatar from '@/components/ui/Avatar'
+import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 
 // Map icon name strings from constants to actual Lucide components
@@ -20,10 +21,22 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 interface SidebarProps {
   profile: Profile | null
-  onSignOut: () => void
+  onSignOut?: () => void
 }
 
 export default function Sidebar({ profile, onSignOut }: SidebarProps) {
+  const router = useRouter()
+
+  async function handleSignOut() {
+    if (onSignOut) {
+      onSignOut()
+      return
+    }
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.refresh()
+    router.push('/auth')
+  }
   const [collapsed, setCollapsed] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
   const popoverRef = useRef<HTMLDivElement>(null)
@@ -53,11 +66,18 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
         {!collapsed && (
-          <div>
-            <span className="font-display font-light text-seeper-white text-xl">
-              seeper<span className="text-plasma">●</span>
-            </span>
-            <div className="text-quantum text-xs font-display">wiki</div>
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 flex-shrink-0">
+              <circle cx="14" cy="14" r="12.5" stroke="#ED693A" strokeWidth="1.5" />
+              <path d="M14 4 Q22 14 14 24 Q6 14 14 4Z" fill="white" fillOpacity="0.9" />
+              <circle cx="14" cy="14" r="3" fill="#0d0d0d" />
+            </svg>
+            <div>
+              <span className="font-display font-light text-seeper-white text-xl">
+                seeper<span className="text-plasma">●</span>
+              </span>
+              <div className="text-quantum text-xs font-display">wiki</div>
+            </div>
           </div>
         )}
         {collapsed && (
@@ -171,7 +191,7 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               </Link>
               <button
                 type="button"
-                onClick={() => { setPopoverOpen(false); onSignOut() }}
+                onClick={() => { setPopoverOpen(false); handleSignOut() }}
                 className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-seeper-steel hover:bg-white/5 hover:text-seeper-white transition-colors"
               >
                 <LogOut size={15} />

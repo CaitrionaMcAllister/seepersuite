@@ -1,43 +1,42 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { generateDailyDigest } from '@/lib/claude'
-import { MOCK_DIGEST, MOCK_TICKER_HEADLINES } from '@/lib/constants'
+import { MOCK_NEWS, MOCK_DIGEST_STORIES } from '@/lib/constants'
 import AppShell from '@/components/layout/AppShell'
-import DailyDigest from '@/components/dashboard/DailyDigest'
+import { DailyDigest } from '@/components/dashboard/DailyDigest'
 import QuickLinks from '@/components/dashboard/QuickLinks'
 import WikiUpdates from '@/components/dashboard/WikiUpdates'
 import NewsletterPreview from '@/components/dashboard/NewsletterPreview'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
-import NewsTicker from '@/components/dashboard/NewsTicker'
-import type { Profile } from '@/types'
+import type { Profile, DigestStory } from '@/types'
 
-async function getTodaysDigest(): Promise<string> {
-  const today = new Date().toISOString().split('T')[0]
+async function getTodaysDigest(): Promise<DigestStory[]> {
+  try {
+    const serviceClient = createServiceClient()
+    const today = new Date().toISOString().split('T')[0]
 
-  // Read uses anon client (RLS: authenticated read allowed)
-  const anonClient = createClient()
-  const { data: cached } = await anonClient
-    .from('daily_digest')
-    .select('content')
-    .eq('date', today)
-    .single()
+    const { data: cached } = await serviceClient
+      .from('daily_digest').select('content, generated_at').eq('date', today).single()
 
-  if (cached?.content) return cached.content
+    if (cached) {
+      try {
+        const stories: DigestStory[] = JSON.parse(cached.content)
+        if (Array.isArray(stories) && stories.length > 0) return stories
+      } catch { /* fall through */ }
+    }
 
-  // Generate via Claude — pass mock headlines in Phase 1 so the API is actually called.
-  // Phase 2: replace MOCK_TICKER_HEADLINES with freshly fetched RSS headlines.
-  const content = await generateDailyDigest([...MOCK_TICKER_HEADLINES])
+    const headlines = MOCK_NEWS.map(n => n.title)
+    const stories = await generateDailyDigest(headlines)
 
-  // Write uses service-role client — daily_digest has no authenticated INSERT policy.
-  const serviceClient = createServiceClient()
-  const { error: upsertError } = await serviceClient
-    .from('daily_digest')
-    .upsert({ content, date: today }, { onConflict: 'date' })
-  if (upsertError) {
-    console.error('[digest] Failed to cache digest:', upsertError.message)
+    const { error: upsertError } = await serviceClient
+      .from('daily_digest')
+      .upsert({ content: JSON.stringify(stories), date: today }, { onConflict: 'date' })
+    if (upsertError) console.error('[digest] Cache error:', upsertError.message)
+
+    return stories
+  } catch {
+    return MOCK_DIGEST_STORIES
   }
-
-  return content
 }
 
 export default async function DashboardPage() {
@@ -53,41 +52,28 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  // Fetch today's digest (cached or freshly generated).
-  // Falls back to MOCK_DIGEST if Supabase or Claude is unavailable.
-  let digestContent = MOCK_DIGEST
-  try {
-    digestContent = await getTodaysDigest()
-  } catch {
-    // Use mock digest if anything fails — never break the dashboard
-  }
+  const stories = await getTodaysDigest()
 
   return (
     <AppShell profile={profile as Profile | null}>
-      <div className="flex flex-col min-h-full">
-        {/* Main scrollable content */}
-        <div className="flex-1 p-8 flex flex-col gap-6 max-w-screen-2xl mx-auto w-full">
-          {/* Daily Digest hero */}
-          <DailyDigest content={digestContent} />
+      <div className="flex flex-col gap-6 max-w-screen-2xl mx-auto w-full">
+        {/* Daily Digest hero */}
+        <DailyDigest initialStories={stories} />
 
-          {/* Quick links */}
-          <QuickLinks />
+        {/* Quick links */}
+        <QuickLinks />
 
-          {/* Two-column grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
-            {/* Left column */}
-            <div className="flex flex-col gap-6">
-              <WikiUpdates />
-              <NewsletterPreview />
-            </div>
-
-            {/* Right column */}
-            <ActivityFeed />
+        {/* Two-column grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
+          {/* Left column */}
+          <div className="flex flex-col gap-6">
+            <WikiUpdates />
+            <NewsletterPreview />
           </div>
-        </div>
 
-        {/* News ticker — pinned to bottom of content area */}
-        <NewsTicker />
+          {/* Right column */}
+          <ActivityFeed />
+        </div>
       </div>
     </AppShell>
   )

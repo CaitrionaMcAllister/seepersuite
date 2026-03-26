@@ -1,28 +1,51 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 
-// Mock the Anthropic SDK before importing the module
-vi.mock('@anthropic-ai/sdk', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    messages: {
-      create: vi.fn().mockResolvedValue({
-        content: [{ type: 'text', text: 'Mocked Claude response.' }],
-      }),
+// Hoist mockCreate so it's available inside the vi.mock factory (which is hoisted)
+const { mockCreate } = vi.hoisted(() => {
+  const mockCreate = vi.fn().mockResolvedValue({
+    content: [{ type: 'text', text: 'Mocked Claude response.' }],
+  })
+  return { mockCreate }
+})
+
+vi.mock('@anthropic-ai/sdk', () => {
+  return {
+    default: class MockAnthropic {
+      messages = { create: mockCreate }
     },
-  })),
-}))
+  }
+})
 
 import { generateDailyDigest, summariseArticle, tagContent, generateNewsletterIntro } from '@/lib/claude'
 
+beforeAll(() => {
+  // Ensure API key is set so getClient() doesn't throw in tests
+  process.env.ANTHROPIC_API_KEY = 'test-key'
+})
+
 describe('generateDailyDigest', () => {
-  it('returns a string', async () => {
-    const result = await generateDailyDigest(['headline 1', 'headline 2'])
-    expect(typeof result).toBe('string')
+  it('returns MOCK_DIGEST_STORIES array for empty headlines (no API call)', async () => {
+    const result = await generateDailyDigest([])
+    expect(Array.isArray(result)).toBe(true)
     expect(result.length).toBeGreaterThan(0)
+    expect(result[0]).toHaveProperty('title')
+    expect(result[0]).toHaveProperty('summary')
   })
 
-  it('returns fallback string when given empty headlines', async () => {
-    const result = await generateDailyDigest([])
-    expect(typeof result).toBe('string')
+  it('calls Claude and returns parsed DigestStory[] on success', async () => {
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: '[{"title":"T","summary":"S","sources":["X"],"category":"AI"}]' }]
+    })
+    const result = await generateDailyDigest(['headline 1'])
+    expect(Array.isArray(result)).toBe(true)
+    expect(result[0]).toHaveProperty('title', 'T')
+    expect(result[0]).toHaveProperty('summary', 'S')
+  })
+
+  it('returns MOCK_DIGEST_STORIES when Claude API fails', async () => {
+    mockCreate.mockRejectedValueOnce(new Error('API error'))
+    const result = await generateDailyDigest(['headline 1'])
+    expect(Array.isArray(result)).toBe(true)
   })
 })
 

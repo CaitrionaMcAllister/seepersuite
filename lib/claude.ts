@@ -9,7 +9,8 @@ import 'server-only'
 //   - generateNewsletterIntro: app/newsletter/new/page.tsx (Phase 2)
 
 import Anthropic from '@anthropic-ai/sdk'
-import { MOCK_DIGEST } from '@/lib/constants'
+import { MOCK_DIGEST_STORIES } from '@/lib/constants'
+import type { DigestStory, SearchableItem } from '@/types'
 
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -23,33 +24,26 @@ function extractText(response: Anthropic.Message): string {
   return ''
 }
 
-/**
- * Generate a 3-sentence daily digest from a list of headlines.
- * Tone: direct, knowledgeable, creative-industry-aware, written for seeper's team.
- *
- * In Phase 1, callers pass MOCK_TICKER_HEADLINES as the headlines array so that
- * Claude is actually invoked. Passing an empty array is also safe — it falls back
- * to MOCK_DIGEST without an API call (useful for tests and offline dev).
- */
-export async function generateDailyDigest(headlines: string[]): Promise<string> {
-  if (headlines.length === 0) return MOCK_DIGEST
+export async function generateDailyDigest(headlines: string[]): Promise<DigestStory[]> {
+  if (headlines.length === 0) return MOCK_DIGEST_STORIES
 
   try {
     const client = getClient()
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 300,
-      messages: [
-        {
-          role: 'user',
-          content: `Summarise these headlines into a 3-sentence digest for seeper's team — an immersive experience design studio. Be direct, knowledgeable, and creative-industry-aware. Focus on what matters to the team's work.\n\nHeadlines:\n${headlines.join('\n')}`,
-        },
-      ],
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `You are the editorial AI for seeper, an immersive experience design studio. Write 4 brief digest stories from these headlines for the seeper team. Each story should be 2-3 sentences, written in a direct, knowledgeable tone — no fluff. Focus on relevance to immersive experience design, creative technology, and the studio's work.\n\nHeadlines:\n${headlines.join('\n')}\n\nReturn ONLY valid JSON in this exact format, no other text:\n[\n  {\n    "title": "short title",\n    "summary": "2-3 sentence summary relevant to seeper",\n    "sources": ["Source 1"],\n    "category": "AI & ML"\n  }\n]`,
+      }],
     })
-    return extractText(response)
+    const text = extractText(response)
+    const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const parsed: unknown = JSON.parse(clean)
+    if (Array.isArray(parsed)) return parsed as DigestStory[]
+    return MOCK_DIGEST_STORIES
   } catch {
-    // Return fallback content if API call fails
-    return MOCK_DIGEST
+    return MOCK_DIGEST_STORIES
   }
 }
 
@@ -121,4 +115,17 @@ export async function generateNewsletterIntro(items: string[]): Promise<string> 
   } catch {
     return 'Welcome to this issue of the seeper digest. Here\'s what\'s been happening across the studio.'
   }
+}
+
+export async function semanticSearch(
+  query: string,
+  content: SearchableItem[]
+): Promise<SearchableItem[]> {
+  // TODO: Replace with Claude embeddings in Phase 3
+  const q = query.toLowerCase()
+  return content.filter(item =>
+    item.title.toLowerCase().includes(q) ||
+    item.description?.toLowerCase().includes(q) ||
+    item.tags?.some(t => t.includes(q))
+  )
 }
