@@ -36,8 +36,13 @@ CREATE TABLE IF NOT EXISTS resources (
   file_path   TEXT,
   upvotes     INTEGER NOT NULL DEFAULT 0,
   added_by    UUID REFERENCES profiles(id) ON DELETE SET NULL,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TRIGGER resources_updated_at
+  BEFORE UPDATE ON resources
+  FOR EACH ROW EXECUTE PROCEDURE update_updated_at();
 
 -- ============================================================
 -- TABLE: anonymous_votes
@@ -142,6 +147,9 @@ CREATE POLICY "tools: authenticated insert"
 CREATE POLICY "tools: owner or admin update"
   ON tools FOR UPDATE TO authenticated
   USING (auth.uid() = added_by OR is_admin());
+CREATE POLICY "tools: owner or admin delete"
+  ON tools FOR DELETE TO authenticated
+  USING (auth.uid() = added_by OR is_admin());
 
 -- resources: same pattern
 CREATE POLICY "resources: authenticated read"
@@ -164,6 +172,9 @@ CREATE POLICY "notifications: user reads own"
   USING (auth.uid() = user_id);
 CREATE POLICY "notifications: user updates own"
   ON notifications FOR UPDATE TO authenticated
+  USING (auth.uid() = user_id);
+CREATE POLICY "notifications: user deletes own"
+  ON notifications FOR DELETE TO authenticated
   USING (auth.uid() = user_id);
 
 -- tool_endorsements: authenticated read/insert

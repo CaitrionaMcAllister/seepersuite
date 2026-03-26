@@ -102,6 +102,9 @@ export type ActivityAction =
   | 'edited_wiki'
   | 'added_prompt'
   | 'published_newsletter'
+  | 'contributed'
+  | 'upvoted'
+  | 'signed_in'
 
 export interface NavItem {
   label: string
@@ -169,6 +172,7 @@ export interface Resource {
   upvotes: number
   added_by: string | null
   created_at: string
+  updated_at: string
 }
 
 // Notification
