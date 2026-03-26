@@ -5,6 +5,7 @@ import Sidebar from './Sidebar'
 import Header from './Header'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import { NewsTicker } from '@/components/ui/NewsTicker'
 
 interface AppShellProps {
   profile: Profile | null
@@ -29,6 +30,7 @@ export default function AppShell({ profile, children }: AppShellProps) {
         <main className="flex-1 overflow-y-auto">
           {children}
         </main>
+        <NewsTicker />
       </div>
     </div>
   )
