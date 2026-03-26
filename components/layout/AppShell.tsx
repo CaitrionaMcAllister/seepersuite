@@ -6,6 +6,7 @@ import Header from './Header'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
 import { NewsTicker } from '@/components/ui/NewsTicker'
+import { FAB } from '@/components/ui/FAB'
 
 interface AppShellProps {
   profile: Profile | null
@@ -27,8 +28,9 @@ export default function AppShell({ profile, children }: AppShellProps) {
       <Sidebar profile={profile} onSignOut={handleSignOut} />
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header profile={profile} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto p-6 relative">
           {children}
+          <FAB />
         </main>
         <NewsTicker />
       </div>
