@@ -175,7 +175,7 @@ export interface Resource {
 export interface Notification {
   id: string
   user_id: string
-  type: 'wiki_updated' | 'prompt_upvoted' | 'contribution_approved' | 'new_member' | 'digest_ready'
+  type: NotificationPrefKey
   title: string
   body: string | null
   read: boolean
