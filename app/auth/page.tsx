@@ -74,7 +74,7 @@ export default function AuthPage() {
             </p>
             <button
               type="button"
-              onClick={() => { setSent(false); setEmail(''); setError('') }}
+              onClick={() => { setSent(false); setEmail(''); setError(null) }}
               className="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
             >
               Try a different email
