@@ -18,10 +18,11 @@ interface SearchModalProps {
 
 function highlight(text: string, query: string): React.ReactNode {
   if (!query.trim()) return text
-  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const regex = new RegExp(`(${escaped})`, 'gi')
   const parts = text.split(regex)
   return parts.map((part, i) =>
-    regex.test(part)
+    i % 2 === 1
       ? <mark key={i} style={{ background: 'rgba(237,105,58,0.25)', color: 'inherit' }}>{part}</mark>
       : part
   )
@@ -40,6 +41,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
       setTimeout(() => inputRef.current?.focus(), 50)
       setQuery('')
       setResults([])
+      setActiveFilters(['All'])
     }
   }, [open])
 
