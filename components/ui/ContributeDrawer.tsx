@@ -47,7 +47,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
     if (title.trim().length < 5)   e.title = 'Title must be at least 5 characters'
     if (!category)                 e.category = 'Please select a category'
     if (description.trim().length < 20) e.description = 'Description must be at least 20 characters'
-    if (url && !/^https?:\/\//.test(url)) e.url = 'URL must start with https://'
+    if (url && !/^https:\/\//.test(url)) e.url = 'URL must start with https://'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -75,6 +75,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
     if (!validate()) return
     setLoading(true)
     try {
+      // TODO Task 10: replace with multipart/form-data to send actual file
       const res = await fetch('/api/contribute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,6 +86,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           tags: selectedTags,
           description,
           url: url || null,
+          file_name: fileName || null,
         }),
       })
       if (!res.ok) throw new Error('Failed')
@@ -111,7 +113,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-seeper-border/40">
           <span className="text-sm font-bold tracking-tight">contribute to seeper wiki</span>
-          <button onClick={onClose} className="text-seeper-steel hover:text-[var(--color-text)] transition-colors">✕</button>
+          <button type="button" onClick={onClose} className="text-seeper-steel hover:text-[var(--color-text)] transition-colors">✕</button>
         </div>
 
         {/* Scrollable body */}
@@ -119,7 +121,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* Name */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-1 flex items-center gap-2">
-              Your name <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
+              Your name <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
             </label>
             <input
               type="text"
@@ -138,7 +140,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* Title */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-1 flex items-center gap-2">
-              Title <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
+              Title <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
             </label>
             <input
               type="text"
@@ -156,11 +158,12 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* Category grid */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-2 flex items-center gap-2">
-              Category <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
+              Category <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
               {CATEGORIES.map(cat => (
                 <button
+                  type="button"
                   key={cat.id}
                   onClick={() => setCategory(cat.id)}
                   style={category === cat.id ? {
@@ -185,11 +188,12 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* Tags */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-2 flex items-center gap-2">
-              Tags <span className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
+              Tags <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
             </label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {PRESET_TAGS.map(tag => (
                 <button
+                  type="button"
                   key={tag}
                   onClick={() => handleTagToggle(tag)}
                   className={cn(
@@ -216,7 +220,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* Description */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-1 flex items-center gap-2">
-              Description <span className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
+              Description <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
             </label>
             <div className="relative">
               <textarea
@@ -239,7 +243,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* URL */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-1 flex items-center gap-2">
-              Link / URL <span className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
+              Link / URL <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
             </label>
             <input
               type="url"
@@ -257,7 +261,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           {/* File upload */}
           <div>
             <label className="text-xs text-[var(--color-subtext)] mb-1 flex items-center gap-2">
-              Attach file <span className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
+              Attach file <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-[var(--color-raised)] text-[var(--color-muted)] text-[10px]">optional</span>
             </label>
             <input
               ref={fileRef}
@@ -267,6 +271,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
               onChange={e => setFileName(e.target.files?.[0]?.name ?? '')}
             />
             <button
+              type="button"
               onClick={() => fileRef.current?.click()}
               className="w-full bg-[var(--color-raised)] border border-seeper-border/40 rounded-lg px-3 py-2 text-sm text-[var(--color-subtext)] text-left hover:border-seeper-border transition-colors"
             >
@@ -278,6 +283,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
         {/* Footer */}
         <div className="px-5 pb-5 pt-3 border-t border-seeper-border/40">
           <button
+            type="button"
             onClick={handleSubmit}
             disabled={!isValid || loading}
             className={cn(
