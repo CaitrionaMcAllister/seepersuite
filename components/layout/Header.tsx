@@ -61,6 +61,7 @@ export default function Header({ profile }: HeaderProps) {
             <span className="ml-2 px-1.5 py-0.5 rounded border border-seeper-border/40 text-[10px]">⌘K</span>
           </button>
           <button
+            type="button"
             onClick={toggleTheme}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-seeper-border/40 hover:border-plasma/60 transition-all duration-300"
           >
