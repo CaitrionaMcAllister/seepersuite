@@ -1,4 +1,4 @@
-import type { NavSection, QuickLink, MockActivityItem, MockWikiUpdate } from '@/types'
+import type { NavSection, QuickLink, MockActivityItem, MockWikiUpdate, SearchableItem } from '@/types'
 
 // seeper division naming — see[X] convention
 export const SECTION_NAMES = {
@@ -122,3 +122,86 @@ export const MOCK_DIGEST =
   'This week in AI and immersive tech: OpenAI released significant updates to their real-time API enabling lower-latency voice interactions for installations. Runway\'s Gen-3 Alpha continues to set benchmarks for video generation quality relevant to seeper\'s content pipeline. Meanwhile, a major theme park operator in the GCC has announced a $2B immersive experience investment that could signal new brief opportunities in the region.'
 
 export const DIGEST_SOURCES = ['The Verge', 'Hugging Face', 'Creative Applications']
+
+export const MOCK_SEARCH_ITEMS: SearchableItem[] = [
+  {
+    id: 'wiki-1',
+    title: 'UE5 Pipeline Guide',
+    description: 'Setting up Unreal Engine 5 for live event production',
+    excerpt: 'This guide covers the full pipeline from asset creation to real-time rendering in live environments.',
+    section: 'seeWiki',
+    sectionColor: '#B0A9CF',
+    href: '/wiki/ue5-pipeline-guide',
+    category: 'tech',
+    tags: ['#ue5', '#production', '#workflow'],
+    author: 'Caitriona McAllister',
+  },
+  {
+    id: 'wiki-2',
+    title: 'Projection Mapping Basics',
+    description: 'Core concepts for projection mapping at scale',
+    excerpt: 'Covers surface mapping, blending, and edge correction for large-scale installations.',
+    section: 'seeWiki',
+    sectionColor: '#B0A9CF',
+    href: '/wiki/projection-mapping-basics',
+    category: 'creative',
+    tags: ['#projection', '#creative', '#3d'],
+    author: 'Design Team',
+  },
+  {
+    id: 'news-1',
+    title: 'GPT-4o gets real-time video understanding',
+    description: 'OpenAI announces video analysis capabilities in ChatGPT',
+    excerpt: 'The new multimodal update allows real-time analysis of video streams, opening new workflows for AI-assisted production.',
+    section: 'seeNews',
+    sectionColor: '#ED693A',
+    href: '/news',
+    category: 'ai',
+    tags: ['#ai', '#research'],
+  },
+  {
+    id: 'news-2',
+    title: 'TouchDesigner 2025 release notes',
+    description: 'Major updates to the real-time visual programming environment',
+    excerpt: 'New GPU instancing, improved CHOP performance, and native Apple Silicon support headline the 2025 release.',
+    section: 'seeNews',
+    sectionColor: '#ED693A',
+    href: '/news',
+    category: 'tools',
+    tags: ['#tools', '#production', '#workflow'],
+  },
+  {
+    id: 'prompt-1',
+    title: 'Midjourney cinematic lighting prompt',
+    description: 'Generate dramatic event photography lighting with Midjourney',
+    excerpt: 'A prompt template for generating cinematic lighting references for event design.',
+    section: 'seePrompts',
+    sectionColor: '#EDDE5C',
+    href: '/prompts',
+    category: 'image-gen',
+    tags: ['#ai', '#creative'],
+    author: 'Art Direction',
+  },
+  {
+    id: 'tool-1',
+    title: 'TouchDesigner',
+    description: 'Real-time visual programming environment for live events',
+    section: 'seeTools',
+    sectionColor: '#DCFEAD',
+    href: '/tools',
+    category: 'production',
+    tags: ['#tools', '#production', '#ue5'],
+  },
+  {
+    id: 'resource-1',
+    title: 'Show Control Bible',
+    description: 'Internal reference document for seeper show control standards',
+    excerpt: 'Covers OSC, MIDI, timecode, and network architecture for complex show control setups.',
+    section: 'seeResources',
+    sectionColor: '#8ACB8F',
+    href: '/resources',
+    category: 'production',
+    tags: ['#production', '#workflow', '#audio'],
+    author: 'Tech Team',
+  },
+]
