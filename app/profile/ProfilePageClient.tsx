@@ -15,7 +15,13 @@ const AVATAR_COLORS = [
   { label: 'Pink',    value: '#D4537E' },
 ]
 
-const DEPARTMENTS = ['Creative','Production','Technology','Business','Operations','Leadership']
+const DEPARTMENTS: { label: string; value: string }[] = [
+  { label: 'Creative',    value: 'creative' },
+  { label: 'Production',  value: 'production' },
+  { label: 'Technology',  value: 'tech' },
+  { label: 'Business',    value: 'business' },
+  { label: 'Operations',  value: 'operations' },
+]
 
 const SKILL_SUGGESTIONS = [
   'UE5','Projection Mapping','TouchDesigner','Show Control',
@@ -38,9 +44,10 @@ function getInitialsFromName(name: string | null | undefined): string {
 interface ProfilePageClientProps {
   profile: Profile | null
   email: string
+  userId: string
 }
 
-export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
+export function ProfilePageClient({ profile, email, userId }: ProfilePageClientProps) {
   const { toast } = useToast()
   const supabase = createClient()
   const [tab, setTab] = useState<'overview' | 'edit' | 'notifications'>('overview')
@@ -69,11 +76,11 @@ export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
   const handleSave = async () => {
     setSaving(true)
     const { error } = await supabase.from('profiles').upsert({
-      id: profile?.id,
+      id: userId,
       full_name: fullName,
       display_name: displayName,
       role: jobTitle,
-      department: department.toLowerCase() || null,
+      department: department || null,
       bio,
       skills,
       location,
@@ -88,7 +95,7 @@ export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
   const handleSaveNotifications = async () => {
     const { error } = await supabase.from('profiles').update({
       notifications_prefs: notifPrefs,
-    }).eq('id', profile?.id ?? '')
+    }).eq('id', userId)
     if (error) toast('Failed to save preferences.', 'error')
     else toast('Notification preferences saved!', 'success')
   }
@@ -142,7 +149,7 @@ export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Department</p>
-              <p className="text-sm capitalize">{profile?.department ?? '—'}</p>
+              <p className="text-sm">{DEPARTMENTS.find(d => d.value === profile?.department)?.label ?? profile?.department ?? '—'}</p>
             </div>
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Location</p>
@@ -155,6 +162,10 @@ export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Role</p>
               <p className="text-sm">{profile?.role ?? '—'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-[var(--color-muted)] mb-1">Email</p>
+              <p className="text-sm">{email}</p>
             </div>
           </div>
           {profile?.bio && (
@@ -236,17 +247,17 @@ export function ProfilePageClient({ profile, email }: ProfilePageClientProps) {
             <div className="grid grid-cols-3 gap-2">
               {DEPARTMENTS.map(d => (
                 <button
-                  key={d}
+                  key={d.value}
                   type="button"
-                  onClick={() => setDepartment(d)}
+                  onClick={() => setDepartment(d.value)}
                   className={cn(
                     'py-2 rounded-lg border text-xs font-medium transition-all',
-                    department === d
+                    department === d.value
                       ? 'border-plasma bg-plasma/10 text-plasma'
                       : 'border-seeper-border/40 text-[var(--color-subtext)] hover:border-seeper-border'
                   )}
                 >
-                  {d}
+                  {d.label}
                 </button>
               ))}
             </div>

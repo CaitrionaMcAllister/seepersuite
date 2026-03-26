@@ -13,7 +13,7 @@ export default async function ProfilePage() {
 
   return (
     <AppShell profile={profile as Profile | null}>
-      <ProfilePageClient profile={profile as Profile | null} email={user.email ?? ''} />
+      <ProfilePageClient profile={profile as Profile | null} email={user.email ?? ''} userId={user.id} />
     </AppShell>
   )
 }
