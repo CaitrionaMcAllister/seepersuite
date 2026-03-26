@@ -34,8 +34,8 @@ export function createClient() {
 
 /**
  * Service-role client — bypasses RLS. Use ONLY in server-side API routes
- * for writes to news_cache and daily_digest (which have no authenticated
- * write policies). Never use this in Server Components or client code.
+ * for writes to tables with no authenticated write policies (news_cache,
+ * daily_digest, contributions). Never use this in Server Components or client code.
  */
 export function createServiceClient() {
   return createServerClient(
