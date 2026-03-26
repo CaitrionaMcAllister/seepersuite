@@ -1,5 +1,7 @@
 // All shared TypeScript interfaces for seeper wiki
 
+export type NotificationPrefKey = 'wiki_updated' | 'prompt_upvoted' | 'contribution_approved' | 'new_member' | 'digest_ready'
+
 export interface Profile {
   id: string
   full_name: string | null
@@ -13,7 +15,7 @@ export interface Profile {
   location?: string
   linkedin_url?: string
   avatar_color?: string
-  notifications_prefs?: Record<string, boolean>
+  notifications_prefs?: Partial<Record<NotificationPrefKey, boolean>>
 }
 
 export type Department = 'creative' | 'production' | 'tech' | 'business' | 'operations'
@@ -242,5 +244,5 @@ export interface DigestStory {
   summary: string
   sources: string[]
   category: string
-  imageUrl?: string | null
+  imageUrl?: string
 }
