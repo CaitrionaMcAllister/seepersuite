@@ -1,11 +1,11 @@
 'use client'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   Home, Radio, BookOpen, Settings2, LayoutGrid, Sparkles,
   Star, Users, FlaskConical, Shield,
-  ChevronLeft, ChevronRight, LogOut, type LucideIcon,
+  ChevronLeft, ChevronRight, LogOut, UserCircle, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { NAV_SECTIONS } from '@/lib/constants'
@@ -25,8 +25,23 @@ interface SidebarProps {
 
 export default function Sidebar({ profile, onSignOut }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const [popoverOpen, setPopoverOpen] = useState(false)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const isAdmin = profile?.role === 'admin'
+
+  // Close popover on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setPopoverOpen(false)
+      }
+    }
+    if (popoverOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [popoverOpen])
 
   return (
     <aside
@@ -127,16 +142,58 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         ))}
       </nav>
 
-      {/* User profile + sign out */}
-      <div className="border-t border-seeper-border p-3">
-        <div className={cn('flex items-center gap-3', collapsed && 'justify-center')}>
+      {/* User profile + popover */}
+      <div className="border-t border-seeper-border p-3 relative" ref={popoverRef}>
+        {/* Popover */}
+        {popoverOpen && (
+          <div className="absolute bottom-full left-2 right-2 mb-2 bg-seeper-surface border border-seeper-border rounded-xl shadow-xl p-4 z-50">
+            <div className="flex items-center gap-3 mb-3">
+              <Avatar
+                src={profile?.avatar_url}
+                name={profile?.display_name ?? profile?.full_name}
+                size={40}
+              />
+              <div className="min-w-0">
+                <p className="font-display font-medium text-seeper-white text-sm truncate">
+                  {profile?.display_name ?? profile?.full_name ?? 'seeper team'}
+                </p>
+                <p className="text-seeper-muted text-xs capitalize">{profile?.role ?? ''}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Link
+                href="/profile"
+                onClick={() => setPopoverOpen(false)}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-seeper-steel hover:bg-white/5 hover:text-seeper-white transition-colors"
+              >
+                <UserCircle size={15} />
+                View profile
+              </Link>
+              <button
+                type="button"
+                onClick={() => { setPopoverOpen(false); onSignOut() }}
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-seeper-steel hover:bg-white/5 hover:text-seeper-white transition-colors"
+              >
+                <LogOut size={15} />
+                Sign out
+              </button>
+            </div>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setPopoverOpen(o => !o)}
+          className={cn('flex items-center gap-3 w-full rounded-lg hover:bg-white/5 transition-colors p-1', collapsed && 'justify-center')}
+          aria-label="Open profile menu"
+        >
           <Avatar
             src={profile?.avatar_url}
             name={profile?.display_name ?? profile?.full_name}
             size={36}
           />
           {!collapsed && (
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-left">
               <p className="font-display font-medium text-seeper-white text-sm truncate">
                 {profile?.display_name ?? profile?.full_name ?? 'seeper team'}
               </p>
@@ -145,16 +202,7 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               )}
             </div>
           )}
-          {!collapsed && (
-            <button
-              onClick={onSignOut}
-              className="text-seeper-muted hover:text-seeper-white transition-colors"
-              aria-label="Sign out"
-            >
-              <LogOut size={16} />
-            </button>
-          )}
-        </div>
+        </button>
       </div>
     </aside>
   )
