@@ -159,6 +159,9 @@ CREATE POLICY "resources: authenticated insert"
 CREATE POLICY "resources: owner or admin update"
   ON resources FOR UPDATE TO authenticated
   USING (auth.uid() = added_by OR is_admin());
+CREATE POLICY "resources: owner or admin delete"
+  ON resources FOR DELETE TO authenticated
+  USING (auth.uid() = added_by OR is_admin());
 
 -- anonymous_votes: public read, public insert (no auth required)
 CREATE POLICY "anonymous_votes: public read"
