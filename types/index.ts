@@ -8,6 +8,12 @@ export interface Profile {
   department: Department | null
   avatar_url: string | null
   created_at: string
+  bio?: string
+  skills?: string[]
+  location?: string
+  linkedin_url?: string
+  avatar_color?: string
+  notifications_prefs?: Record<string, boolean>
 }
 
 export type Department = 'creative' | 'production' | 'tech' | 'business' | 'operations'
@@ -60,7 +66,7 @@ export interface NewsletterIssue {
   author?: Profile
 }
 
-export interface NewsItem {
+export interface RawNewsItem {
   id: string
   title: string
   url: string
@@ -131,4 +137,110 @@ export interface MockWikiUpdate {
   category: WikiCategory
   author: string
   time: string
+}
+
+// Tool directory
+export interface Tool {
+  id: string
+  name: string
+  category: string
+  description: string | null
+  url: string | null
+  version: string | null
+  licence_info: string | null
+  upvotes: number
+  copy_count: number
+  added_by: string | null
+  created_at: string
+  updated_at: string
+}
+
+// Resource
+export interface Resource {
+  id: string
+  title: string
+  type: 'PDF' | 'DOC' | 'Link' | 'Video' | 'Image'
+  category: string
+  description: string | null
+  url: string | null
+  file_path: string | null
+  upvotes: number
+  added_by: string | null
+  created_at: string
+}
+
+// Notification
+export interface Notification {
+  id: string
+  user_id: string
+  type: 'wiki_updated' | 'prompt_upvoted' | 'contribution_approved' | 'new_member' | 'digest_ready'
+  title: string
+  body: string | null
+  read: boolean
+  resource_type: string | null
+  resource_id: string | null
+  created_at: string
+}
+
+// Contribution (from Contribute Drawer)
+export interface Contribution {
+  id: string
+  submitter_name: string
+  title: string
+  category: string
+  description: string
+  tags: string[] | null
+  url: string | null
+  file_path: string | null
+  status: 'pending' | 'approved' | 'rejected'
+  reviewed_by: string | null
+  reviewed_at: string | null
+  submitted_at: string
+}
+
+// Anonymous vote
+export interface AnonymousVote {
+  id: string
+  resource_type: 'news' | 'prompt' | 'tool' | 'resource' | 'wiki'
+  resource_id: string
+  browser_id: string | null
+  created_at: string
+}
+
+// Search result shape
+export interface SearchableItem {
+  id: string
+  title: string
+  description?: string
+  tags?: string[]
+  section: string
+  sectionColor: string
+  href: string
+  category?: string
+  author?: string
+  excerpt?: string
+}
+
+// News item (mock/real)
+export interface NewsItem {
+  id: string
+  title: string
+  summary: string
+  category: string
+  source: string
+  sourceUrl: string
+  imageUrl: string | null
+  publishedAt: string
+  tags: string[]
+  upvotes: number
+  featured?: boolean
+}
+
+// Digest story (structured, from Phase 2 Claude prompt)
+export interface DigestStory {
+  title: string
+  summary: string
+  sources: string[]
+  category: string
+  imageUrl?: string | null
 }
