@@ -33,6 +33,17 @@ interface NewsArticle {
   category: string | null
   published_at: string | null
   is_featured: boolean
+  is_blocked: boolean
+}
+
+interface WikiPost {
+  id: string
+  title: string
+  category: string
+  submitter_name: string
+  submitted_at: string
+  is_featured: boolean
+  is_blocked: boolean
 }
 
 interface AdminPageClientProps {
@@ -42,11 +53,12 @@ interface AdminPageClientProps {
   recentActivity: any[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pendingContributions: any[]
+  approvedContributions: WikiPost[]
   newsSources: NewsSource[]
   newsArticles: NewsArticle[]
 }
 
-export function AdminPageClient({ stats, recentActivity, pendingContributions, newsSources: initialSources, newsArticles: initialArticles }: AdminPageClientProps) {
+export function AdminPageClient({ stats, recentActivity, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles }: AdminPageClientProps) {
   const [tab, setTab] = useState('Overview')
   const [digestLoading, setDigestLoading] = useState(false)
   const [digestMessage, setDigestMessage] = useState<string | null>(null)
@@ -138,6 +150,7 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, n
   const [articles, setArticles] = useState<NewsArticle[]>(initialArticles)
   const [deletingArticle, setDeletingArticle] = useState<string | null>(null)
   const [featuringArticle, setFeaturingArticle] = useState<string | null>(null)
+  const [blockingArticle, setBlockingArticle] = useState<string | null>(null)
 
   const handleDeleteArticle = async (id: string) => {
     setDeletingArticle(id)
@@ -153,7 +166,6 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, n
 
   const handleFeatureArticle = async (id: string, is_featured: boolean) => {
     setFeaturingArticle(id)
-    // Optimistic update
     setArticles(prev => prev.map(a => a.id === id ? { ...a, is_featured } : a))
     try {
       await fetch('/api/admin/news', {
@@ -162,9 +174,68 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, n
         body: JSON.stringify({ id, is_featured }),
       })
     } catch {
-      // Revert on failure
       setArticles(prev => prev.map(a => a.id === id ? { ...a, is_featured: !is_featured } : a))
     } finally { setFeaturingArticle(null) }
+  }
+
+  const handleBlockArticle = async (id: string, is_blocked: boolean) => {
+    setBlockingArticle(id)
+    setArticles(prev => prev.map(a => a.id === id ? { ...a, is_blocked, is_featured: is_blocked ? false : a.is_featured } : a))
+    try {
+      await fetch('/api/admin/news', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_blocked, ...(is_blocked ? { is_featured: false } : {}) }),
+      })
+    } catch {
+      setArticles(prev => prev.map(a => a.id === id ? { ...a, is_blocked: !is_blocked } : a))
+    } finally { setBlockingArticle(null) }
+  }
+
+  // seeWiki post management
+  const [wikiPosts, setWikiPosts] = useState<WikiPost[]>(initialWikiPosts)
+  const [featuringWiki, setFeaturingWiki] = useState<string | null>(null)
+  const [blockingWiki, setBlockingWiki] = useState<string | null>(null)
+  const [deletingWiki, setDeletingWiki] = useState<string | null>(null)
+
+  const handleFeatureWiki = async (id: string, is_featured: boolean) => {
+    setFeaturingWiki(id)
+    setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_featured } : p))
+    try {
+      await fetch('/api/admin/contributions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_featured }),
+      })
+    } catch {
+      setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_featured: !is_featured } : p))
+    } finally { setFeaturingWiki(null) }
+  }
+
+  const handleBlockWiki = async (id: string, is_blocked: boolean) => {
+    setBlockingWiki(id)
+    setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_blocked, is_featured: is_blocked ? false : p.is_featured } : p))
+    try {
+      await fetch('/api/admin/contributions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, is_blocked, ...(is_blocked ? { is_featured: false } : {}) }),
+      })
+    } catch {
+      setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_blocked: !is_blocked } : p))
+    } finally { setBlockingWiki(null) }
+  }
+
+  const handleDeleteWiki = async (id: string) => {
+    setDeletingWiki(id)
+    try {
+      const res = await fetch('/api/admin/contributions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (res.ok) setWikiPosts(prev => prev.filter(p => p.id !== id))
+    } finally { setDeletingWiki(null) }
   }
 
   const handleContributionAction = async (id: string, status: 'approved' | 'rejected') => {
@@ -322,25 +393,130 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, n
           )}
           </div>
 
+          {/* seeWiki posts */}
+          <div>
+            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
+              seeWiki posts ({wikiPosts.filter(p => !p.is_blocked).length} visible
+              {wikiPosts.filter(p => p.is_blocked).length > 0 && `, ${wikiPosts.filter(p => p.is_blocked).length} blocked`})
+            </h3>
+            {wikiPosts.length === 0 ? (
+              <div className="seeper-card p-8 text-center">
+                <p className="text-sm text-[var(--color-muted)]">No approved posts yet</p>
+              </div>
+            ) : (
+              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                {[...wikiPosts]
+                  .sort((a, b) => {
+                    if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
+                    if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1
+                    return 0
+                  })
+                  .map(p => (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
+                      p.is_blocked
+                        ? 'opacity-40 hover:opacity-60'
+                        : p.is_featured
+                          ? 'bg-[var(--color-raised)]'
+                          : 'hover:bg-[var(--color-raised)]'
+                    )}
+                  >
+                    {/* Star / feature toggle */}
+                    <button
+                      onClick={() => !p.is_blocked && handleFeatureWiki(p.id, !p.is_featured)}
+                      disabled={featuringWiki === p.id || p.is_blocked}
+                      title={p.is_blocked ? 'Unblock to feature' : p.is_featured ? 'Remove from featured' : 'Feature this post'}
+                      className="flex-shrink-0 text-sm leading-none disabled:opacity-30 transition-opacity"
+                    >
+                      {featuringWiki === p.id ? (
+                        <span className="text-[var(--color-muted)]">…</span>
+                      ) : p.is_featured ? (
+                        <span style={{ color: '#EDDE5C' }}>★</span>
+                      ) : (
+                        <span className="opacity-30 group-hover:opacity-60 text-[var(--color-muted)]">☆</span>
+                      )}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className={cn('text-xs font-medium truncate', p.is_blocked && 'line-through')}>{p.title}</p>
+                        {p.is_featured && !p.is_blocked && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#ED693A' }}>Featured</span>
+                        )}
+                        {p.is_blocked && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[var(--color-muted)]">
+                        {p.submitter_name}{p.category ? ` · ${p.category}` : ''}{p.submitted_at ? ` · ${new Date(p.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleBlockWiki(p.id, !p.is_blocked)}
+                        disabled={blockingWiki === p.id}
+                        title={p.is_blocked ? 'Unblock — show in seeWiki' : 'Block — hide from seeWiki'}
+                        className={cn(
+                          'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
+                          p.is_blocked
+                            ? 'border-fern/40 text-fern hover:bg-fern/10'
+                            : 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                        )}
+                      >
+                        {blockingWiki === p.id ? '…' : p.is_blocked ? 'Unblock' : 'Block'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteWiki(p.id)}
+                        disabled={deletingWiki === p.id}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50"
+                      >
+                        {deletingWiki === p.id ? '…' : 'Delete'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* News articles */}
           <div>
             <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
-              seeNews articles ({articles.length})
+              seeNews articles ({articles.filter(a => !a.is_blocked).length} visible
+              {articles.filter(a => a.is_blocked).length > 0 && `, ${articles.filter(a => a.is_blocked).length} blocked`})
             </h3>
             {articles.length === 0 ? (
               <div className="seeper-card p-8 text-center">
                 <p className="text-sm text-[var(--color-muted)]">No articles in cache</p>
               </div>
             ) : (
-              <div className="space-y-1 max-h-[500px] overflow-y-auto">
-                {[...articles].sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)).map(a => (
-                  <div key={a.id} className={`flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors ${a.is_featured ? 'bg-[var(--color-raised)]' : 'hover:bg-[var(--color-raised)]'}`}>
-                    {/* Star / feature toggle */}
+              <div className="space-y-1 max-h-[600px] overflow-y-auto">
+                {[...articles]
+                  .sort((a, b) => {
+                    // featured first, then normal, then blocked last
+                    if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
+                    if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1
+                    return 0
+                  })
+                  .map(a => (
+                  <div
+                    key={a.id}
+                    className={cn(
+                      'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
+                      a.is_blocked
+                        ? 'opacity-40 hover:opacity-60'
+                        : a.is_featured
+                          ? 'bg-[var(--color-raised)]'
+                          : 'hover:bg-[var(--color-raised)]'
+                    )}
+                  >
+                    {/* Star / feature toggle — disabled when blocked */}
                     <button
-                      onClick={() => handleFeatureArticle(a.id, !a.is_featured)}
-                      disabled={featuringArticle === a.id}
-                      title={a.is_featured ? 'Remove from featured' : 'Feature this article'}
-                      className="flex-shrink-0 text-sm leading-none disabled:opacity-40 transition-opacity"
+                      onClick={() => !a.is_blocked && handleFeatureArticle(a.id, !a.is_featured)}
+                      disabled={featuringArticle === a.id || a.is_blocked}
+                      title={a.is_blocked ? 'Unblock to feature' : a.is_featured ? 'Remove from featured' : 'Feature this article'}
+                      className="flex-shrink-0 text-sm leading-none disabled:opacity-30 transition-opacity"
                     >
                       {featuringArticle === a.id ? (
                         <span className="text-[var(--color-muted)]">…</span>
@@ -352,22 +528,40 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, n
                     </button>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-xs font-medium truncate">{a.title}</p>
-                        {a.is_featured && (
+                        <p className={cn('text-xs font-medium truncate', a.is_blocked && 'line-through')}>{a.title}</p>
+                        {a.is_featured && !a.is_blocked && (
                           <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#ED693A' }}>Featured</span>
+                        )}
+                        {a.is_blocked && (
+                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
                         )}
                       </div>
                       <p className="text-[10px] text-[var(--color-muted)]">
                         {a.source}{a.category ? ` · ${a.category}` : ''}{a.published_at ? ` · ${new Date(a.published_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                       </p>
                     </div>
-                    <button
-                      onClick={() => handleDeleteArticle(a.id)}
-                      disabled={deletingArticle === a.id}
-                      className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50 flex-shrink-0"
-                    >
-                      {deletingArticle === a.id ? '…' : 'Delete'}
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => handleBlockArticle(a.id, !a.is_blocked)}
+                        disabled={blockingArticle === a.id}
+                        title={a.is_blocked ? 'Unblock — show in seeNews' : 'Block — hide from seeNews'}
+                        className={cn(
+                          'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
+                          a.is_blocked
+                            ? 'border-fern/40 text-fern hover:bg-fern/10'
+                            : 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                        )}
+                      >
+                        {blockingArticle === a.id ? '…' : a.is_blocked ? 'Unblock' : 'Block'}
+                      </button>
+                      <button
+                        onClick={() => handleDeleteArticle(a.id)}
+                        disabled={deletingArticle === a.id}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50"
+                      >
+                        {deletingArticle === a.id ? '…' : 'Delete'}
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

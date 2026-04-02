@@ -110,27 +110,43 @@ function stripHtml(html: string | null | undefined): string | null {
 // User-added sources in news_sources are assumed to be fully relevant — no filter applied,
 // except for source-specific blocklists below.
 
-const DEFAULT_SOURCE_NAMES = new Set([
-  'The Verge', 'MIT Technology Review', 'Wired', 'Hugging Face', 'Dezeen', '80.lv',
-])
-
-const RELEVANCE_RE = /ai|artificial intelligence|machine learning|generative|immersive|xr|\bar\b|\bvr\b|mixed reality|spatial|projection|installation|experience|interactive|unreal|touchdesigner|real.?time|creative|visual|3d|runway|midjourney|claude|openai|design|render|animation|blender|houdini|unity|haptic|led|dmx|show control/i
-
 // Patterns that indicate a page/section rather than an article, keyed by source name.
 // Titles matching these are dropped regardless of relevance.
 const SOURCE_BLOCKLIST: Record<string, RegExp> = {
   'ExperienceUK': /^(association partners|sponsors|members|about us|join us|contact|events calendar|home|news$|resources$|benefits of membership)|^experience\s*uk$|experience\s*uk$/i,
 }
 
+// Must match at least one term to be considered relevant to Seeper's domain
+// (creative tech, AI, immersive experiences, XR, generative art, live production tools)
+const RELEVANCE_RE =
+  /\bai\b|artificial intelligence|machine learning|llm|gpt|claude\b|openai|anthropic|midjourney|stable diffusion|generative ai|diffusion model|neural|deepfake|computer vision|image model|video model|language model|foundation model|sora|runway\b|flux\b|\bxr\b|augmented reality|\bvr\b|virtual reality|mixed reality|spatial computing|apple vision|meta quest|headset|wearable tech|immersive|projection mapping|installation art|interactive art|experience design|theme park|attraction|museum tech|live event tech|exhibition tech|touchdesigner|unreal engine|\bue5\b|notch\b|blender|houdini|after effects|nuke\b|davinci resolve|real.?time render|3d render|motion capture|volumetric|vfx|visual effect|shader|game engine|creative technolog|generative art|digital art|new media|motion design|visual effect|sound design|spatial audio|ambisonics|music tech|audio tech|led wall|video mapping|show control|\bdmx\b|haptic|kinect|lidar|point cloud|web3|nft\b|crypto art|metaverse|avatar|digital twin|broadcast tech|live production|esport|pixel\b/i
+
+// Fallback-source names — broad feeds that need STRICT relevance filtering
+const DEFAULT_SOURCE_NAMES = new Set([
+  'The Verge', 'MIT Technology Review', 'Wired', 'Hugging Face', 'Dezeen', '80.lv',
+])
+
+// Topics that are clearly off-domain — matched against title only (more focused than full text)
+// Applied to ALL sources as a sanity check even when a domain source is trusted
+const OFFTOPIC_TITLE_RE =
+  /^(review:|best \d|top \d|\d+ best|\d+ ways|how to cook|recipe|workout|fitness tips|horoscope|weather|stock market|real estate|mortgage|car review|new car|electric car|test drive|sports result|match report|transfer news|premier league|nba |nfl |mlb |cricket|tennis|golf|boxing match|celebrity|red carpet|fashion week|runway show|beauty|skincare|makeup|plastic surgery|diet|weight loss|politics|election|congress|senate|parliament|law enforcement|crime|murder|court case|immigration|border|military strike|airstrike|bombing)/i
+
 function isRelevant(title: string, description: string | null, source: string): boolean {
   // Source-specific blocklist — drop non-article pages from known feeds
   const blocklist = SOURCE_BLOCKLIST[source]
   if (blocklist && blocklist.test(title.trim())) return false
 
-  // Custom user-added sources: always include (after blocklist check)
-  if (!DEFAULT_SOURCE_NAMES.has(source)) return true
-  // Default broad feeds: apply keyword filter to reduce noise
-  return RELEVANCE_RE.test(`${title} ${description ?? ''}`)
+  // Off-topic title check — clearly irrelevant regardless of source
+  if (OFFTOPIC_TITLE_RE.test(title.trim())) return false
+
+  // Broad fallback feeds: require a strong domain keyword in title + description
+  if (DEFAULT_SOURCE_NAMES.has(source)) {
+    return RELEVANCE_RE.test(`${title} ${description ?? ''}`)
+  }
+
+  // Custom user-added sources: apply relevance check to title only (they're domain-focused,
+  // but we still want to catch obviously off-domain articles that sneak through)
+  return RELEVANCE_RE.test(title)
 }
 
 // ── Main ingest ───────────────────────────────────────────────────────────────

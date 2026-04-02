@@ -8,6 +8,7 @@ export async function GET() {
     .from('news_cache')
     .select('id, title, url, source')
     .eq('is_featured', true)
+    .eq('is_blocked', false)
     .order('published_at', { ascending: false })
     .limit(20)
 

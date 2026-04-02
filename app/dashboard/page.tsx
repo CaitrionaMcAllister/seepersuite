@@ -35,6 +35,7 @@ async function getFeaturedDigest(): Promise<DigestStory[]> {
       .from('news_cache')
       .select('id, title, summary, category, source, source_url, url, published_at')
       .eq('is_featured', true)
+      .eq('is_blocked', false)
       .order('published_at', { ascending: false })
       .limit(10)
 
@@ -86,6 +87,7 @@ export default async function DashboardPage() {
     .from('contributions')
     .select('id, submitter_name, title, category, submitted_at')
     .eq('status', 'approved')
+    .eq('is_blocked', false)
     .order('submitted_at', { ascending: false })
     .limit(8)
 

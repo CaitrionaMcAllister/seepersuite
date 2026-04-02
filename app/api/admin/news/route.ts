@@ -26,10 +26,17 @@ export async function PATCH(req: NextRequest) {
   const admin = await requireAdmin()
   if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { id, is_featured } = await req.json()
-  if (!id || typeof is_featured !== 'boolean') return NextResponse.json({ error: 'id and is_featured required' }, { status: 400 })
+  const body = await req.json()
+  const { id } = body
+  if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  const { error } = await createServiceClient().from('news_cache').update({ is_featured }).eq('id', id)
+  // Allow patching is_featured or is_blocked independently
+  const update: Record<string, boolean> = {}
+  if (typeof body.is_featured === 'boolean') update.is_featured = body.is_featured
+  if (typeof body.is_blocked === 'boolean') update.is_blocked = body.is_blocked
+  if (Object.keys(update).length === 0) return NextResponse.json({ error: 'no valid fields to update' }, { status: 400 })
+
+  const { error } = await createServiceClient().from('news_cache').update(update).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

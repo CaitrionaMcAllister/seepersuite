@@ -17,16 +17,18 @@ export default async function NewsPage() {
   await ingestIfStale()
 
   const serviceClient = createServiceClient()
-  // Fetch latest 200 articles + total count
+  // Fetch latest 200 articles (excluding blocked) + total count of non-blocked
   const [{ data: articles }, { count: totalCount }] = await Promise.all([
     serviceClient
       .from('news_cache')
       .select('id, title, url, source, source_url, author, summary, category, tags, image_url, upvotes, views, is_featured, published_at')
+      .eq('is_blocked', false)
       .order('published_at', { ascending: false })
       .limit(200),
     serviceClient
       .from('news_cache')
-      .select('*', { count: 'exact', head: true }),
+      .select('*', { count: 'exact', head: true })
+      .eq('is_blocked', false),
   ])
 
   return (

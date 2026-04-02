@@ -19,6 +19,7 @@ export default async function AdminPage() {
     { count: promptCount },
     { data: recentActivity },
     { data: pendingContributions },
+    { data: approvedContributions },
     { data: newsSources },
     { data: newsArticles },
   ] = await Promise.all([
@@ -27,8 +28,9 @@ export default async function AdminPage() {
     serviceClient.from('prompts').select('*', { count: 'exact', head: true }),
     serviceClient.from('activity_log').select('*').order('created_at', { ascending: false }).limit(50),
     serviceClient.from('contributions').select('*').eq('status', 'pending').order('submitted_at', { ascending: false }),
+    serviceClient.from('contributions').select('id, title, category, submitter_name, submitted_at, is_featured, is_blocked').eq('status', 'approved').order('submitted_at', { ascending: false }).limit(100),
     serviceClient.from('news_sources').select('*').order('created_at', { ascending: true }),
-    serviceClient.from('news_cache').select('id, title, url, source, category, published_at, is_featured').order('published_at', { ascending: false }).limit(100),
+    serviceClient.from('news_cache').select('id, title, url, source, category, published_at, is_featured, is_blocked').order('published_at', { ascending: false }).limit(100),
   ])
 
   return (
@@ -38,6 +40,7 @@ export default async function AdminPage() {
         stats={{ userCount: userCount ?? 0, wikiCount: wikiCount ?? 0, promptCount: promptCount ?? 0 }}
         recentActivity={recentActivity ?? []}
         pendingContributions={pendingContributions ?? []}
+        approvedContributions={approvedContributions ?? []}
         newsSources={newsSources ?? []}
         newsArticles={newsArticles ?? []}
       />
