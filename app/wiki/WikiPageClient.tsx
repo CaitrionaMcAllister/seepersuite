@@ -9,36 +9,69 @@ import { cn } from '@/lib/utils'
 
 const CATEGORIES = ['All', 'Creative', 'Production', 'Tech', 'Business', 'AI', 'General']
 
-export function WikiPageClient() {
+interface Contribution {
+  id: string
+  submitter_name: string
+  title: string
+  category: string
+  description: string
+  tags: string[]
+  submitted_at: string
+}
+
+function nameInitials(name: string): string {
+  return name.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase()
+}
+
+function toWikiPage(c: Contribution) {
+  return {
+    slug: `contribution-${c.id}`,
+    title: c.title,
+    category: c.category,
+    author: c.submitter_name,
+    authorInitials: nameInitials(c.submitter_name),
+    excerpt: c.description,
+    views: 0,
+    updatedAt: c.submitted_at,
+    tags: c.tags ?? [],
+  }
+}
+
+export function WikiPageClient({ contributions = [] }: { contributions?: Contribution[] }) {
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch] = useState('')
 
+  const allPages = useMemo(() => {
+    const fromContributions = contributions.map(toWikiPage)
+    // Merge: contributions first (most recent), then mock pages
+    return [...fromContributions, ...MOCK_WIKI_PAGES]
+  }, [contributions])
+
   const filtered = useMemo(() => {
-    return MOCK_WIKI_PAGES.filter(page => {
+    return allPages.filter(page => {
       const matchesCat = activeCategory === 'All' || page.category.toLowerCase() === activeCategory.toLowerCase()
       const q = search.toLowerCase()
       const matchesSearch = !q || page.title.toLowerCase().includes(q) || page.excerpt.toLowerCase().includes(q)
       return matchesCat && matchesSearch
     })
-  }, [activeCategory, search])
+  }, [allPages, activeCategory, search])
 
-  const mostViewed = [...MOCK_WIKI_PAGES].sort((a, b) => b.views - a.views).slice(0, 4)
-  const recentlyUpdated = [...MOCK_WIKI_PAGES].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 4)
+  const recentlyUpdated = useMemo(
+    () => [...allPages].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 5),
+    [allPages]
+  )
+
+  const mostViewed = useMemo(
+    () => [...MOCK_WIKI_PAGES].sort((a, b) => b.views - a.views).slice(0, 4),
+    []
+  )
 
   return (
     <div className="page-enter">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-xl font-black" style={{ color: 'var(--color-wiki)' }}>seeWiki</h1>
-          <p className="text-xs text-[var(--color-muted)] mt-1">{MOCK_WIKI_PAGES.length} pages</p>
-        </div>
-        <Link
-          href="/wiki/new"
-          className="px-4 py-2 rounded-full bg-quantum/10 border border-quantum/40 text-quantum text-xs font-bold hover:bg-quantum/20 transition-all"
-        >
-          + New page
-        </Link>
+      <div className="mb-6">
+        <h1 className="text-xl font-black" style={{ color: 'var(--color-wiki)' }}>seeWiki</h1>
+        <p className="text-xs text-[var(--color-muted)] mt-1">{allPages.length} pages</p>
       </div>
 
       {/* Search */}

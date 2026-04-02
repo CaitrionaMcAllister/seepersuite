@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Avatar from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
+import { UpvoteButton } from '@/components/ui/UpvoteButton'
 
 interface PromptCardProps {
   id: string
@@ -120,17 +121,7 @@ export function PromptCard({
       {/* Footer */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
-          <button
-            onClick={handleUpvote}
-            className={cn(
-              'flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-all duration-150',
-              voted
-                ? 'border-plasma text-plasma bg-plasma/10'
-                : 'border-seeper-border/40 text-[var(--color-muted)] hover:border-plasma/60'
-            )}
-          >
-            ▲ <span className={cn(popping && 'upvote-pop')}>{upvotes}</span>
-          </button>
+          <UpvoteButton count={upvotes} voted={voted} onClick={handleUpvote} popping={popping} />
           <span className="text-[10px] text-[var(--color-muted)] px-1.5 py-0.5 rounded-full border border-seeper-border/40">anon ok</span>
         </div>
 

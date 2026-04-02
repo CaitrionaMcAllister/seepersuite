@@ -1,17 +1,79 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useToast } from '@/hooks/useToast'
 import { cn } from '@/lib/utils'
 
-const CATEGORIES = [
-  { id: 'seeNews',      label: 'seeNews',      color: '#ED693A' },
-  { id: 'seeWiki',      label: 'seeWiki',      color: '#B0A9CF' },
-  { id: 'seeTools',     label: 'seeTools',     color: '#DCFEAD' },
-  { id: 'seeResources', label: 'seeResources', color: '#8ACB8F' },
-  { id: 'seePrompts',   label: 'seePrompts',   color: '#EDDE5C' },
-  { id: 'seeInside',    label: 'seeInside',    color: '#D4537E' },
-]
+const SECTIONS: Record<string, { label: string; color: string; categories: { id: string; label: string; color: string }[] }> = {
+  seeWiki: {
+    label: 'seeWiki', color: '#B0A9CF',
+    categories: [
+      { id: 'creative',   label: 'Creative',   color: '#ED693A' },
+      { id: 'production', label: 'Production', color: '#B0A9CF' },
+      { id: 'tech',       label: 'Tech',       color: '#DCFEAD' },
+      { id: 'business',   label: 'Business',   color: '#EDDE5C' },
+      { id: 'ai',         label: 'AI',         color: '#8ACB8F' },
+      { id: 'general',    label: 'General',    color: '#C3C3C3' },
+    ],
+  },
+  seeNews: {
+    label: 'seeNews', color: '#ED693A',
+    categories: [
+      { id: 'AI & ML',       label: 'AI',           color: '#7F77DD' },
+      { id: 'Immersive',     label: 'Immersive',    color: '#ED693A' },
+      { id: 'Tools',         label: 'Tools',        color: '#DCFEAD' },
+      { id: 'Spatial',       label: 'Spatial',      color: '#B0A9CF' },
+      { id: 'Creative Tech', label: 'Creative Tech', color: '#EDDE5C' },
+      { id: 'Industry',      label: 'Industry',     color: '#D4537E' },
+      { id: 'Events',        label: 'Events',       color: '#ED693A' },
+      { id: 'Audio',         label: 'Audio',        color: '#8ACB8F' },
+    ],
+  },
+  seeTools: {
+    label: 'seeTools', color: '#DCFEAD',
+    categories: [
+      { id: 'creative',      label: 'Creative',      color: '#ED693A' },
+      { id: 'production',    label: 'Production',    color: '#B0A9CF' },
+      { id: 'tech',          label: 'Tech',          color: '#DCFEAD' },
+      { id: 'management',    label: 'Management',    color: '#EDDE5C' },
+      { id: 'communication', label: 'Communication', color: '#8ACB8F' },
+    ],
+  },
+  seeResources: {
+    label: 'seeResources', color: '#8ACB8F',
+    categories: [
+      { id: 'documents',    label: 'Documents',    color: '#8ACB8F' },
+      { id: 'links',        label: 'Links',        color: '#B0A9CF' },
+      { id: 'templates',    label: 'Templates',    color: '#DCFEAD' },
+      { id: 'brand_assets', label: 'Brand Assets', color: '#ED693A' },
+      { id: 'research',     label: 'Research',     color: '#EDDE5C' },
+      { id: 'other',        label: 'Other',        color: '#C3C3C3' },
+    ],
+  },
+  seePrompts: {
+    label: 'seePrompts', color: '#EDDE5C',
+    categories: [
+      { id: 'concept',    label: 'Concept',    color: '#ED693A' },
+      { id: 'production', label: 'Production', color: '#B0A9CF' },
+      { id: 'audio',      label: 'Audio',      color: '#8ACB8F' },
+      { id: 'copy',       label: 'Copy',       color: '#EDDE5C' },
+      { id: 'research',   label: 'Research',   color: '#7F77DD' },
+      { id: '3d',         label: '3D',         color: '#DCFEAD' },
+      { id: 'code',       label: 'Code',       color: '#D4537E' },
+    ],
+  },
+  seeInside: {
+    label: 'seeInside', color: '#D4537E',
+    categories: [
+      { id: 'creative',   label: 'Creative',   color: '#ED693A' },
+      { id: 'business',   label: 'Business',   color: '#EDDE5C' },
+      { id: 'production', label: 'Production', color: '#B0A9CF' },
+      { id: 'general',    label: 'General',    color: '#C3C3C3' },
+    ],
+  },
+}
+
+const SECTION_ORDER = ['seeWiki', 'seeNews', 'seeTools', 'seeResources', 'seePrompts', 'seeInside']
 
 const PRESET_TAGS = [
   '#ai','#creative','#production','#tech','#business',
@@ -23,12 +85,14 @@ interface ContributeDrawerProps {
   open: boolean
   onClose: () => void
   authorName?: string
+  defaultSection?: string | null
 }
 
-export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeDrawerProps) {
+export function ContributeDrawer({ open, onClose, authorName = '', defaultSection }: ContributeDrawerProps) {
   const { toast } = useToast()
   const [name, setName] = useState(authorName)
   const [title, setTitle] = useState('')
+  const [section, setSection] = useState(defaultSection ?? 'seeWiki')
   const [category, setCategory] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState('')
@@ -39,6 +103,20 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
   const [errors, setErrors] = useState<Record<string, string>>({})
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Sync section when page changes (drawer closed → re-opened on a different page)
+  useEffect(() => {
+    if (defaultSection && !open) setSection(defaultSection)
+  }, [defaultSection, open])
+
+  const activeSection = SECTIONS[section] ?? SECTIONS.seeWiki
+  const sectionColor = activeSection.color
+  const categories = activeSection.categories
+
+  const handleSectionChange = (s: string) => {
+    setSection(s)
+    setCategory('') // reset category when section changes
+  }
+
   if (!open) return null
 
   const validate = () => {
@@ -46,7 +124,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
     if (!name.trim())              e.name = 'Name is required'
     if (title.trim().length < 5)   e.title = 'Title must be at least 5 characters'
     if (!category)                 e.category = 'Please select a category'
-    if (description.trim().length < 20) e.description = 'Description must be at least 20 characters'
+    if (description.trim().length < 10) e.description = 'Description must be at least 10 characters'
     if (url && !/^https:\/\//.test(url)) e.url = 'URL must start with https://'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -82,6 +160,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
         body: JSON.stringify({
           submitter_name: name,
           title,
+          section,
           category,
           tags: selectedTags,
           description,
@@ -89,17 +168,20 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
           file_name: fileName || null,
         }),
       })
-      if (!res.ok) throw new Error('Failed')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed')
       toast('Contribution submitted! The team will see it shortly.', 'success')
       onClose()
-    } catch {
-      toast('Something went wrong. Please try again.', 'error')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error'
+      console.error('[contribute submit]', msg)
+      toast(`Submit failed: ${msg}`, 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  const isValid = name.trim() && title.trim().length >= 5 && category && description.trim().length >= 20
+  const isValid = name.trim() && title.trim().length >= 5 && category && description.trim().length >= 10
 
   return (
     <>
@@ -111,9 +193,37 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
       {/* Drawer */}
       <div className="fixed bottom-0 right-0 z-[999] w-[400px] max-h-[85vh] flex flex-col rounded-tl-2xl bg-[var(--color-surface)] border border-seeper-border/40 shadow-2xl animate-[slideInFromBottom_0.3s_ease]">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-seeper-border/40">
-          <span className="text-sm font-bold tracking-tight">contribute to seeper wiki</span>
-          <button type="button" onClick={onClose} className="text-seeper-steel hover:text-[var(--color-text)] transition-colors">✕</button>
+        <div className="border-b border-seeper-border/40">
+          <div className="flex items-center justify-between px-5 py-4 pb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold tracking-tight">contribute to</span>
+              <span className="text-sm font-bold" style={{ color: sectionColor }}>{activeSection.label}</span>
+            </div>
+            <button type="button" onClick={onClose} className="text-seeper-steel hover:text-[var(--color-text)] transition-colors">✕</button>
+          </div>
+          {/* Section picker */}
+          <div className="flex gap-1.5 px-5 pb-3 overflow-x-auto scrollbar-hide">
+            {SECTION_ORDER.map(s => {
+              const sec = SECTIONS[s]
+              const active = s === section
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => handleSectionChange(s)}
+                  style={active ? { borderColor: sec.color, color: sec.color, backgroundColor: `${sec.color}18` } : {}}
+                  className={cn(
+                    'flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium border transition-all duration-150',
+                    active
+                      ? 'border-2'
+                      : 'border-seeper-border/40 text-[var(--color-muted)] hover:border-seeper-border'
+                  )}
+                >
+                  {sec.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* Scrollable body */}
@@ -161,7 +271,7 @@ export function ContributeDrawer({ open, onClose, authorName = '' }: ContributeD
               Category <span aria-hidden="true" className="px-1.5 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px]">required</span>
             </label>
             <div className="grid grid-cols-3 gap-2">
-              {CATEGORIES.map(cat => (
+              {categories.map(cat => (
                 <button
                   type="button"
                   key={cat.id}

@@ -1,8 +1,8 @@
 import AppShell from '@/components/layout/AppShell'
+import PlaceholderPage from '@/components/ui/PlaceholderPage'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/types'
-import { InsidePageClient } from './InsidePageClient'
 
 export default async function InsidePage() {
   const supabase = createClient()
@@ -13,7 +13,11 @@ export default async function InsidePage() {
 
   return (
     <AppShell profile={profile as Profile | null}>
-      <InsidePageClient />
+      <PlaceholderPage
+        sectionName="seeInside"
+        title="seeInside"
+        description="The inside track on seeper — culture, values, perks, and everything that makes us us."
+      />
     </AppShell>
   )
 }

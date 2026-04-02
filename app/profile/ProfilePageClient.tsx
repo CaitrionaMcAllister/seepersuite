@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/useToast'
 import { cn } from '@/lib/utils'
-import type { Profile, NotificationPrefKey } from '@/types'
+import type { Profile, NotificationPrefKey, Department } from '@/types'
 
 const AVATAR_COLORS = [
   { label: 'Plasma',  value: '#ED693A' },
@@ -15,17 +16,28 @@ const AVATAR_COLORS = [
   { label: 'Pink',    value: '#D4537E' },
 ]
 
-const DEPARTMENTS: { label: string; value: string }[] = [
+const DEPARTMENTS: { label: string; value: Department }[] = [
   { label: 'Creative',    value: 'creative' },
   { label: 'Production',  value: 'production' },
   { label: 'Technology',  value: 'tech' },
   { label: 'Business',    value: 'business' },
   { label: 'Operations',  value: 'operations' },
+  { label: 'Finance',     value: 'finance' },
 ]
 
 const SKILL_SUGGESTIONS = [
   'UE5','Projection Mapping','TouchDesigner','Show Control',
   'After Effects','3D','AR/VR','Motion Design','Audio Design','Creative Direction',
+]
+
+const PROJECT_SUGGESTIONS = [
+  "Shrek's Adventure", "Dewar's Distillery", "Netflix Fan Experience",
+  "GCC Theme Park", "Immersive Audio", "AR Installation",
+]
+
+const INTEREST_SUGGESTIONS = [
+  'Spatial Computing', 'AI Video', 'Sound Design', 'Architecture',
+  'Game Design', 'Live Events', 'Projection Art', 'Interactive Design',
 ]
 
 const NOTIFICATION_LABELS: Record<NotificationPrefKey, string> = {
@@ -50,19 +62,28 @@ interface ProfilePageClientProps {
 export function ProfilePageClient({ profile, email, userId }: ProfilePageClientProps) {
   const { toast } = useToast()
   const supabase = createClient()
-  const [tab, setTab] = useState<'overview' | 'edit' | 'notifications'>('overview')
+  const searchParams = useSearchParams()
+  const [tab, setTab] = useState<'overview' | 'edit' | 'notifications'>(
+    searchParams.get('tab') === 'edit' ? 'edit' : 'overview'
+  )
 
-  // Edit tab state
-  const [fullName, setFullName]         = useState(profile?.full_name ?? '')
-  const [displayName, setDisplayName]   = useState(profile?.display_name ?? '')
-  const [jobTitle, setJobTitle]         = useState(profile?.role ?? '')
-  const [department, setDepartment]     = useState(profile?.department ?? '')
+  // Edit tab state — preset defaults for Caitriona McAllister
+  const [fullName, setFullName]         = useState(profile?.full_name ?? 'Caitriona McAllister')
+  const [displayName, setDisplayName]   = useState(profile?.display_name ?? 'Caitriona')
+  const [jobTitle, setJobTitle]         = useState(profile?.job_title ?? 'Creative Technologist')
+  const [department, setDepartment]     = useState(profile?.department ?? 'creative')
   const [bio, setBio]                   = useState(profile?.bio ?? '')
   const [skills, setSkills]             = useState<string[]>(profile?.skills ?? [])
   const [skillInput, setSkillInput]     = useState('')
+  const [projects, setProjects]         = useState<string[]>(profile?.projects ?? [])
+  const [projectInput, setProjectInput] = useState('')
+  const [interests, setInterests]       = useState<string[]>(profile?.interests ?? [])
+  const [interestInput, setInterestInput] = useState('')
   const [location, setLocation]         = useState(profile?.location ?? '')
   const [linkedinUrl, setLinkedinUrl]   = useState(profile?.linkedin_url ?? '')
   const [avatarColor, setAvatarColor]   = useState(profile?.avatar_color ?? '#ED693A')
+  const [avatarUrl, setAvatarUrl]       = useState<string | null>(profile?.avatar_url ?? null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [saving, setSaving]             = useState(false)
 
   // Notifications tab state
@@ -79,17 +100,24 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
       id: userId,
       full_name: fullName,
       display_name: displayName,
-      role: jobTitle,
+      job_title: jobTitle,
       department: department || null,
       bio,
       skills,
+      projects,
+      interests,
       location,
       linkedin_url: linkedinUrl,
       avatar_color: avatarColor,
+      avatar_url: avatarUrl,
     })
     setSaving(false)
-    if (error) toast('Failed to save profile.', 'error')
-    else toast('Profile saved!', 'success')
+    if (error) {
+      console.error('[profile save error]', error.message, error.details, error.hint)
+      toast(`Save failed: ${error.message}`, 'error')
+    } else {
+      toast('Profile saved!', 'success')
+    }
   }
 
   const handleSaveNotifications = async () => {
@@ -107,20 +135,59 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
     setSkillInput('')
   }
 
+  const addProject = (p: string) => {
+    if (p.trim() && !projects.includes(p.trim())) setProjects(prev => [...prev, p.trim()])
+    setProjectInput('')
+  }
+
+  const addInterest = (i: string) => {
+    if (i.trim() && !interests.includes(i.trim())) setInterests(prev => [...prev, i.trim()])
+    setInterestInput('')
+  }
+
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate type and size (max 2 MB)
+    if (!file.type.startsWith('image/')) {
+      toast('Please select an image file.', 'error')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Image must be under 2 MB.', 'error')
+      return
+    }
+
+    setUploadingAvatar(true)
+    const reader = new FileReader()
+    reader.onload = () => {
+      setAvatarUrl(reader.result as string)
+      setUploadingAvatar(false)
+    }
+    reader.onerror = () => {
+      toast('Could not read file. Try again.', 'error')
+      setUploadingAvatar(false)
+    }
+    reader.readAsDataURL(file)
+  }
+
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <div
-          className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white"
+          className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white overflow-hidden"
           style={{ backgroundColor: color }}
         >
-          {initials}
+          {avatarUrl
+            ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+            : initials}
         </div>
         <div>
-          <h1 className="text-xl font-bold">{profile?.full_name ?? 'Your Profile'}</h1>
-          <p className="text-sm text-[var(--color-subtext)]">{profile?.role ?? ''}</p>
-          <p className="text-xs text-[var(--color-muted)]">{email}</p>
+          <h1 className="text-xl font-bold">{profile?.full_name ?? 'Caitriona McAllister'}</h1>
+          <p className="text-sm text-[var(--color-subtext)]">{profile?.job_title ?? 'Creative Technologist'}</p>
+          <p className="text-xs text-[var(--color-muted)]">{email || 'caitriona.mcallister@seeper.com'}</p>
         </div>
       </div>
 
@@ -149,7 +216,7 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Department</p>
-              <p className="text-sm">{DEPARTMENTS.find(d => d.value === profile?.department)?.label ?? profile?.department ?? '—'}</p>
+              <p className="text-sm">{DEPARTMENTS.find(d => d.value === profile?.department)?.label ?? 'Creative'}</p>
             </div>
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Location</p>
@@ -161,11 +228,11 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
             </div>
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Role</p>
-              <p className="text-sm">{profile?.role ?? '—'}</p>
+              <p className="text-sm">{profile?.job_title ?? 'Creative Technologist'}</p>
             </div>
             <div>
               <p className="text-xs text-[var(--color-muted)] mb-1">Email</p>
-              <p className="text-sm">{email}</p>
+              <p className="text-sm">{email || 'caitriona.mcallister@seeper.com'}</p>
             </div>
           </div>
           {profile?.bio && (
@@ -200,22 +267,47 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
       {/* Edit tab */}
       {tab === 'edit' && (
         <div className="space-y-5">
-          {/* Avatar color */}
+          {/* Avatar photo upload */}
           <div>
-            <label className="text-xs text-[var(--color-subtext)] mb-2 block">Avatar colour</label>
+            <label className="text-xs text-[var(--color-subtext)] mb-2 block">Profile photo</label>
+            <div className="flex items-center gap-4">
+              {/* Current avatar preview */}
+              <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: avatarColor }}>
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                  : initials}
+              </div>
+              <div className="flex-1">
+                <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-full border border-seeper-border/40 text-xs text-[var(--color-subtext)] hover:border-plasma/60 hover:text-plasma transition-all">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={uploadingAvatar}
+                  />
+                  {uploadingAvatar ? 'Uploading...' : '📷 Upload photo'}
+                </label>
+                {avatarUrl && (
+                  <button type="button" onClick={() => setAvatarUrl(null)}
+                    className="ml-2 text-xs text-[var(--color-muted)] hover:text-plasma transition-colors">
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Avatar colour (keep below upload for fallback) */}
+          <div>
+            <label className="text-xs text-[var(--color-subtext)] mb-2 block">Avatar fallback colour</label>
             <div className="flex gap-2">
               {AVATAR_COLORS.map(c => (
-                <button
-                  key={c.value}
-                  type="button"
-                  onClick={() => setAvatarColor(c.value)}
-                  className={cn(
-                    'w-8 h-8 rounded-full border-2 transition-all',
-                    avatarColor === c.value ? 'border-white scale-110' : 'border-transparent'
-                  )}
-                  style={{ backgroundColor: c.value }}
-                  title={c.label}
-                />
+                <button key={c.value} type="button" onClick={() => setAvatarColor(c.value)}
+                  className={cn('w-8 h-8 rounded-full border-2 transition-all',
+                    avatarColor === c.value ? 'border-white scale-110' : 'border-transparent')}
+                  style={{ backgroundColor: c.value }} title={c.label} />
               ))}
             </div>
           </div>
@@ -293,6 +385,58 @@ export function ProfilePageClient({ profile, email, userId }: ProfilePageClientP
               onChange={e => setSkillInput(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkill(skillInput) } }}
               placeholder="Add custom skill..."
+              className="w-full bg-[var(--color-raised)] border border-seeper-border/40 rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-plasma/60" />
+          </div>
+
+          {/* Projects */}
+          <div>
+            <label className="text-xs text-[var(--color-subtext)] mb-2 block">Projects</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {projects.map(p => (
+                <span key={p} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-fern/10 text-fern text-xs border border-fern/30">
+                  {p}
+                  <button type="button" onClick={() => setProjects(prev => prev.filter(x => x !== p))} className="text-fern/60 hover:text-fern">✕</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {PROJECT_SUGGESTIONS.filter(p => !projects.includes(p)).map(p => (
+                <button key={p} type="button" onClick={() => addProject(p)}
+                  className="px-2 py-0.5 rounded-full text-xs border border-seeper-border/40 text-[var(--color-muted)] hover:border-seeper-border transition-all">
+                  + {p}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={projectInput}
+              onChange={e => setProjectInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addProject(projectInput) } }}
+              placeholder="Add project..."
+              className="w-full bg-[var(--color-raised)] border border-seeper-border/40 rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-plasma/60" />
+          </div>
+
+          {/* Interests */}
+          <div>
+            <label className="text-xs text-[var(--color-subtext)] mb-2 block">Interests</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {interests.map(i => (
+                <span key={i} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-quantum/10 text-quantum text-xs border border-quantum/30">
+                  {i}
+                  <button type="button" onClick={() => setInterests(prev => prev.filter(x => x !== i))} className="text-quantum/60 hover:text-quantum">✕</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {INTEREST_SUGGESTIONS.filter(i => !interests.includes(i)).map(i => (
+                <button key={i} type="button" onClick={() => addInterest(i)}
+                  className="px-2 py-0.5 rounded-full text-xs border border-seeper-border/40 text-[var(--color-muted)] hover:border-seeper-border transition-all">
+                  + {i}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={interestInput}
+              onChange={e => setInterestInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addInterest(interestInput) } }}
+              placeholder="Add interest..."
               className="w-full bg-[var(--color-raised)] border border-seeper-border/40 rounded-lg px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-plasma/60" />
           </div>
 

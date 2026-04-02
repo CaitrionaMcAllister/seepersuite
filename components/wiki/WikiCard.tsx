@@ -2,12 +2,18 @@ import Link from 'next/link'
 import Avatar from '@/components/ui/Avatar'
 
 const CATEGORY_COLORS: Record<string, string> = {
-  tech: '#B0A9CF',
-  ai: '#7F77DD',
-  business: '#EDDE5C',
-  production: '#DCFEAD',
-  creative: '#D4537E',
-  general: '#ED693A',
+  tech:         '#B0A9CF',
+  ai:           '#7F77DD',
+  business:     '#EDDE5C',
+  production:   '#DCFEAD',
+  creative:     '#D4537E',
+  general:      '#ED693A',
+  seeNews:      '#ED693A',
+  seeWiki:      '#B0A9CF',
+  seeTools:     '#DCFEAD',
+  seeResources: '#8ACB8F',
+  seePrompts:   '#EDDE5C',
+  seeInside:    '#D4537E',
 }
 
 interface WikiCardProps {

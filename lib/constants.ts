@@ -8,7 +8,6 @@ export const SECTION_NAMES = {
   tools:     'seeTools',
   resources: 'seeResources',
   team:      'seeUs',
-  labs:      'seeLabs',
   insights:  'seeInsights',
   inside:    'seeInside',
 } as const
@@ -28,6 +27,7 @@ export const DEPARTMENTS = [
   { value: 'tech',       label: 'Technology' },
   { value: 'business',   label: 'Business Development' },
   { value: 'operations', label: 'Operations' },
+  { value: 'finance',    label: 'Finance' },
 ] as const
 
 // Navigation config — icon strings are Lucide icon names
@@ -51,9 +51,8 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     label: 'TEAM',
     items: [
-      { label: SECTION_NAMES.inside, href: '/inside', icon: 'Star',         color: '#D4537E' },
-      { label: SECTION_NAMES.team, href: '/team',   icon: 'Users',        color: '#1D9E75' },
-      { label: SECTION_NAMES.labs, href: '/labs',   icon: 'FlaskConical', color: '#7F77DD' },
+      { label: SECTION_NAMES.team,   href: '/team',   icon: 'Users', color: '#1D9E75' },
+      { label: SECTION_NAMES.inside, href: '/inside', icon: 'Star',  color: '#D4537E' },
     ],
   },
   {
@@ -65,13 +64,15 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ]
 
-// Quick links for dashboard tiles — each with a jewel tone accent
+// Quick links for dashboard tiles — hex accent matches sidebar NAV_SECTIONS colors
 export const QUICK_LINKS: readonly QuickLink[] = [
-  { label: SECTION_NAMES.news,      href: '/news',      icon: 'Radio',      accent: 'bg-plasma' },
-  { label: SECTION_NAMES.wiki,      href: '/wiki',      icon: 'BookOpen',   accent: 'bg-quantum' },
-  { label: SECTION_NAMES.prompts,   href: '/prompts',   icon: 'Sparkles',   accent: 'bg-volt' },
-  { label: SECTION_NAMES.tools,     href: '/tools',     icon: 'Settings2',  accent: 'bg-circuit' },
-  { label: SECTION_NAMES.resources, href: '/resources', icon: 'LayoutGrid', accent: 'bg-mossy' },
+  { label: SECTION_NAMES.news,      href: '/news',      icon: 'Radio',      accent: '#ED693A' },
+  { label: SECTION_NAMES.wiki,      href: '/wiki',      icon: 'BookOpen',   accent: '#B0A9CF' },
+  { label: SECTION_NAMES.prompts,   href: '/prompts',   icon: 'Sparkles',   accent: '#EDDE5C' },
+  { label: SECTION_NAMES.tools,     href: '/tools',     icon: 'Settings2',  accent: '#DCFEAD' },
+  { label: SECTION_NAMES.resources, href: '/resources', icon: 'LayoutGrid', accent: '#8ACB8F' },
+  { label: SECTION_NAMES.team,      href: '/team',      icon: 'Users',      accent: '#1D9E75' },
+  { label: SECTION_NAMES.inside,    href: '/inside',    icon: 'Star',       accent: '#D4537E' },
 ]
 
 // Mock ticker headlines for Phase 1 (replaced by live RSS in Phase 2)
@@ -444,28 +445,48 @@ export const MOCK_RESOURCES = [
 // MOCK_DIGEST_STORIES — structured digest stories for DigestStory[]
 export const MOCK_DIGEST_STORIES: DigestStory[] = [
   {
-    title: 'Runway Gen-4 raises the bar for AI video',
-    summary: "Runway's new model handles multi-shot sequences without temporal flickering — directly relevant to seeper's projection content pipeline. Early tests show 3x improvement in scene consistency.",
-    sources: ['The Verge'],
-    category: 'AI & ML',
+    icon: '◉', iconBg: 'rgba(237,105,58,0.2)', iconColor: '#ED693A',
+    catBg: 'rgba(237,105,58,0.15)', catColor: '#ED693A',
+    category: 'AI & Machine Learning', imageLabel: 'AI & Video',
+    title: 'Runway Gen-4 launches with real-time scene consistency for long-form video production',
+    summary: "The new model handles complex multi-shot sequences without the temporal flickering that plagued Gen-3 — directly relevant to seeper's content pipeline for visitor attractions. Early tests show 3x improvement in temporal consistency on camera-move-heavy sequences.",
+    sources: [
+      { label: 'The Verge', abbreviation: 'TV', color: '#ED693A', url: 'https://theverge.com' },
+      { label: 'Runway Blog', abbreviation: 'RW', color: '#B0A9CF', url: 'https://runwayml.com/blog' },
+    ],
   },
   {
-    title: 'GCC immersive entertainment market hits $2B',
-    summary: "Saudi Arabia's PIF has earmarked significant capital for experiential design — opening major brief opportunities for studios with large-scale attraction experience.",
-    sources: ['Dezeen'],
-    category: 'Industry',
+    icon: '⊙', iconBg: 'rgba(29,158,117,0.2)', iconColor: '#1D9E75',
+    catBg: 'rgba(29,158,117,0.15)', catColor: '#1D9E75',
+    category: 'Industry News', imageLabel: 'GCC & Business',
+    title: 'GCC announces $2B immersive experience investment fund across five entertainment districts',
+    summary: "Saudi Arabia's Public Investment Fund has earmarked major capital for experiential design — opening significant brief opportunities for studios with proven large-scale attraction experience. The fund covers five new entertainment districts planned through 2030.",
+    sources: [
+      { label: 'Dezeen', abbreviation: 'Dz', color: '#1D9E75', url: 'https://dezeen.com' },
+      { label: 'Experience UK', abbreviation: 'EU', color: '#8ACB8F', url: 'https://www.experienceuk.org' },
+    ],
   },
   {
-    title: 'TouchDesigner 2026 adds native Notch integration',
-    summary: 'GPU instancing improvements deliver 40% better performance on particle-heavy scenes. Worth testing on the next attraction build.',
-    sources: ['Derivative Blog'],
-    category: 'Tools',
+    icon: '◎', iconBg: 'rgba(176,169,207,0.2)', iconColor: '#B0A9CF',
+    catBg: 'rgba(176,169,207,0.15)', catColor: '#B0A9CF',
+    category: 'Spatial Audio', imageLabel: 'Audio & Spatial',
+    title: 'Google DeepMind releases open-source spatial audio model with real-time binaural processing',
+    summary: 'Supports ambisonics and binaural rendering at latencies fully compatible with interactive installation requirements. Immediately useful for seeper\'s atmospheric design work — handles complex multi-zone audio with minimal CPU overhead.',
+    sources: [
+      { label: 'Hugging Face', abbreviation: 'HF', color: '#EDDE5C', url: 'https://huggingface.co' },
+      { label: 'DeepMind Blog', abbreviation: 'DM', color: '#B0A9CF', url: 'https://deepmind.google/blog' },
+    ],
   },
   {
-    title: 'SXSW names immersive design top creative sector',
-    summary: 'Three of the top five Tribeca Immersive finalists use projection mapping. Industry momentum is at an all-time high for 2026.',
-    sources: ['Creative Applications'],
-    category: 'Industry',
+    icon: '⚙', iconBg: 'rgba(220,254,173,0.2)', iconColor: '#4a7a00',
+    catBg: 'rgba(220,254,173,0.15)', catColor: '#4a7a00',
+    category: 'Tools & Software', imageLabel: 'UE5 Update',
+    title: 'Unreal Engine 5.5 ships with procedural audio tools and improved show control integration',
+    summary: 'New procedural audio nodes simplify the show control pipeline considerably — worth testing against the current Crestron setup on the next attraction build. GPU instancing improvements deliver around 40% better performance on particle-heavy scenes.',
+    sources: [
+      { label: 'Epic Games Blog', abbreviation: 'EG', color: '#DCFEAD', url: 'https://unrealengine.com/blog' },
+      { label: 'Creative Applications', abbreviation: 'CA', color: '#8ACB8F', url: 'https://creativeapplications.net' },
+    ],
   },
 ]
 

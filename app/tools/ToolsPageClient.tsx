@@ -4,6 +4,8 @@ import { useState, useMemo, useEffect } from 'react'
 import { MOCK_TOOLS } from '@/lib/constants'
 import Avatar from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
+import { UpvoteButton } from '@/components/ui/UpvoteButton'
+import { LinkButton } from '@/components/ui/LinkButton'
 
 const CATEGORIES = ['All', 'Creative', 'Production', 'Tech', 'Management', 'Communication']
 
@@ -136,27 +138,8 @@ function ToolCard({ tool }: { tool: typeof MOCK_TOOLS[number] }) {
       </div>
 
       <div className="flex items-center justify-between pt-1 border-t border-seeper-border/20">
-        <button
-          onClick={handleUpvote}
-          className={cn(
-            'flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-all duration-150',
-            voted
-              ? 'border-plasma text-plasma bg-plasma/10'
-              : 'border-seeper-border/40 text-[var(--color-muted)] hover:border-plasma/60'
-          )}
-        >
-          ▲ {upvotes}
-        </button>
-        {tool.url && tool.url !== '#' && (
-          <a
-            href={tool.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] px-2.5 py-1 rounded-full border border-seeper-border/40 text-[var(--color-muted)] hover:border-plasma/60 hover:text-plasma transition-all"
-          >
-            Open ↗
-          </a>
-        )}
+        <UpvoteButton count={upvotes} voted={voted} onClick={handleUpvote} />
+        <LinkButton url={tool.url} />
       </div>
     </div>
   )

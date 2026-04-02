@@ -7,18 +7,21 @@ export interface Profile {
   full_name: string | null
   display_name: string | null
   role: 'admin' | 'member'
+  job_title?: string | null
   department: Department | null
   avatar_url: string | null
   created_at: string
   bio?: string
   skills?: string[]
+  projects?: string[]
+  interests?: string[]
   location?: string
   linkedin_url?: string
   avatar_color?: string
   notifications_prefs?: Partial<Record<NotificationPrefKey, boolean>>
 }
 
-export type Department = 'creative' | 'production' | 'tech' | 'business' | 'operations'
+export type Department = 'creative' | 'production' | 'tech' | 'business' | 'operations' | 'finance'
 
 export type WikiCategory = 'creative' | 'production' | 'tech' | 'business' | 'ai' | 'general'
 
@@ -124,7 +127,7 @@ export interface QuickLink {
   label: string
   href: string
   icon: string
-  accent: string // Tailwind bg class e.g. 'bg-plasma'
+  accent: string // hex color e.g. '#ED693A'
 }
 
 export interface MockActivityItem {
@@ -244,9 +247,19 @@ export interface NewsItem {
 
 // Digest story (structured, from Phase 2 Claude prompt)
 export interface DigestStory {
+  icon: string           // section symbol character
+  iconBg: string         // rgba background for icon circle
+  iconColor: string      // full colour for icon
+  catBg: string          // pill background (rgba)
+  catColor: string       // pill text colour
+  category: string       // display label e.g. "AI & Machine Learning"
+  imageLabel: string     // fallback text shown in image panel
   title: string
   summary: string
-  sources: string[]
-  category: string
-  imageUrl?: string
+  sources: Array<{
+    label: string        // e.g. "The Verge"
+    abbreviation: string // e.g. "TV" — shown in badge
+    color: string        // badge background colour
+    url: string          // link target
+  }>
 }

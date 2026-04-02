@@ -12,6 +12,7 @@ interface AppShellProps {
 }
 
 export default function AppShell({ profile, children }: AppShellProps) {
+  const authorName = profile?.display_name ?? profile?.full_name ?? ''
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--color-bg)]">
       <Sidebar profile={profile} />
@@ -19,7 +20,7 @@ export default function AppShell({ profile, children }: AppShellProps) {
         <Header profile={profile} />
         <main className="flex-1 overflow-y-auto p-6 relative">
           {children}
-          <FAB />
+          <FAB authorName={authorName} />
         </main>
         <NewsTicker />
       </div>

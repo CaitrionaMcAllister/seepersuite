@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   Home, Radio, BookOpen, Settings2, LayoutGrid, Sparkles,
-  Star, Users, FlaskConical, Shield,
+  Star, Users, Shield,
   ChevronLeft, ChevronRight, LogOut, UserCircle, type LucideIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,7 +16,15 @@ import type { Profile } from '@/types'
 // Map icon name strings from constants to actual Lucide components
 const ICON_MAP: Record<string, LucideIcon> = {
   Home, Radio, BookOpen, Settings2, LayoutGrid, Sparkles,
-  Star, Users, FlaskConical, Shield,
+  Star, Users, Shield,
+}
+
+// Change 1 — NAV ICON COLOUR SYSTEM
+const LIGHT_COLORS = new Set(['#DCFEAD', '#EDDE5C', '#8ACB8F'])
+const DARK_SHADES: Record<string, string> = {
+  '#DCFEAD': '#4a7a00',
+  '#EDDE5C': '#5a4200',
+  '#8ACB8F': '#0a4a20',
 }
 
 interface SidebarProps {
@@ -39,6 +47,7 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
   }
   const [collapsed, setCollapsed] = useState(false)
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const [hoveredHref, setHoveredHref] = useState<string | null>(null)
   const popoverRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const isAdmin = profile?.role === 'admin'
@@ -63,25 +72,33 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         collapsed ? 'w-[60px]' : 'w-[240px]'
       )}
     >
-      {/* Header */}
+      {/* Header — Change 8: new logo SVG + link wrapper */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
         {!collapsed && (
-          <div className="flex items-center gap-2">
-            <svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7 flex-shrink-0">
-              <circle cx="14" cy="14" r="12.5" stroke="#ED693A" strokeWidth="1.5" />
-              <path d="M14 4 Q22 14 14 24 Q6 14 14 4Z" fill="white" fillOpacity="0.9" />
-              <circle cx="14" cy="14" r="3" fill="#0d0d0d" />
-            </svg>
-            <div>
-              <span className="font-display font-light text-seeper-white text-xl">
-                seeper<span className="text-plasma">●</span>
-              </span>
-              <div className="text-quantum text-xs font-display">wiki</div>
+          <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#ED693A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
+                <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
+                <circle cx="8" cy="8" r="2.2" fill="#ED693A"/>
+              </svg>
             </div>
-          </div>
+            <div className="min-w-0">
+              <div className="font-display font-light text-seeper-white" style={{ fontSize: 15 }}>seeper</div>
+              <div className="text-quantum font-display" style={{ fontSize: 9 }}>wiki</div>
+            </div>
+          </Link>
         )}
         {collapsed && (
-          <span className="font-display font-light text-plasma text-xl mx-auto">●</span>
+          <Link href="/dashboard" className="mx-auto">
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#ED693A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
+                <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
+                <circle cx="8" cy="8" r="2.2" fill="#ED693A"/>
+              </svg>
+            </div>
+          </Link>
         )}
         <button
           onClick={() => setCollapsed(c => !c)}
@@ -113,12 +130,25 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
 
               const Icon = ICON_MAP[item.icon]
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
+              const isHovered = hoveredHref === item.href && !isActive
+
+              // Change 1 — icon colour logic
+              const isLight = LIGHT_COLORS.has(item.color)
+              const iconColor = isActive
+                ? (isLight ? DARK_SHADES[item.color] : '#ffffff')
+                : item.color
+
+              const iconBg = isActive
+                ? item.color
+                : isHovered
+                  ? `color-mix(in srgb, ${item.color} 28%, transparent)`
+                  : `color-mix(in srgb, ${item.color} 16%, transparent)`
 
               const itemStyle = isActive ? {
                 borderLeftColor: item.color,
                 backgroundColor: `${item.color}14`,
               } : {}
-              const iconStyle = isActive ? { backgroundColor: item.color } : {}
+
               const textStyle = isActive ? { color: item.color } : {}
 
               return (
@@ -132,20 +162,14 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
                     isActive ? '' : 'hover:bg-white/5'
                   )}
                   title={collapsed ? item.label : undefined}
+                  onMouseEnter={() => setHoveredHref(item.href)}
+                  onMouseLeave={() => setHoveredHref(null)}
                 >
                   <span
-                    style={iconStyle}
-                    className={cn(
-                      'w-7 h-7 flex items-center justify-center rounded-md transition-all duration-150 flex-shrink-0',
-                      !isActive && 'bg-white/5'
-                    )}
+                    style={{ backgroundColor: iconBg, color: iconColor }}
+                    className="w-7 h-7 flex items-center justify-center rounded-md flex-shrink-0 transition-all duration-150"
                   >
-                    {Icon && (
-                      <Icon
-                        size={14}
-                        className={isActive ? 'text-seeper-dark' : 'text-seeper-steel'}
-                      />
-                    )}
+                    {Icon && <Icon size={14} style={{ color: iconColor }} />}
                   </span>
                   {!collapsed && (
                     <span
@@ -171,13 +195,14 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               <Avatar
                 src={profile?.avatar_url}
                 name={profile?.display_name ?? profile?.full_name}
+                color={profile?.avatar_color}
                 size={40}
               />
               <div className="min-w-0">
                 <p className="font-display font-medium text-seeper-white text-sm truncate">
-                  {profile?.display_name ?? profile?.full_name ?? 'seeper team'}
+                  {profile?.display_name ?? profile?.full_name ?? 'Caitriona'}
                 </p>
-                <p className="text-seeper-muted text-xs capitalize">{profile?.role ?? ''}</p>
+                <p className="text-seeper-muted text-xs capitalize">{profile?.job_title ?? 'Creative Technologist'}</p>
               </div>
             </div>
             <div className="space-y-1">
@@ -210,16 +235,17 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
           <Avatar
             src={profile?.avatar_url}
             name={profile?.display_name ?? profile?.full_name}
+            color={profile?.avatar_color}
             size={36}
           />
           {!collapsed && (
             <div className="flex-1 min-w-0 text-left">
               <p className="font-display font-medium text-seeper-white text-sm truncate">
-                {profile?.display_name ?? profile?.full_name ?? 'seeper team'}
+                {profile?.display_name ?? profile?.full_name ?? 'Caitriona'}
               </p>
-              {profile?.department && (
-                <p className="text-seeper-muted text-xs capitalize">{profile.department}</p>
-              )}
+              <p className="text-seeper-muted text-xs capitalize">
+                {profile?.job_title ?? profile?.department ?? 'Creative Technologist'}
+              </p>
             </div>
           )}
         </button>

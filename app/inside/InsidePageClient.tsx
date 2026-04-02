@@ -4,20 +4,13 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
-const CHECKLIST = [
-  { id:'1', group:'Getting Started', text:'Read the seeper brand guidelines' },
-  { id:'2', group:'Getting Started', text:'Set up your seeper email' },
-  { id:'3', group:'Getting Started', text:'Join the team Slack workspace' },
-  { id:'4', group:'Getting Started', text:'Complete your seeUs profile' },
-  { id:'5', group:'Getting Started', text:'Get access to Asana and join your first project' },
-  { id:'6', group:'Getting Started', text:'Meet your buddy (ask your manager)' },
-  { id:'7', group:'Tools & Access',  text:'Install Unreal Engine 5' },
-  { id:'8', group:'Tools & Access',  text:'Get Adobe Creative Cloud licence' },
-  { id:'9', group:'Tools & Access',  text:'Set up TouchDesigner trial' },
-  { id:'10', group:'Tools & Access', text:'Access the shared Google Drive' },
-  { id:'11', group:'Culture & Process', text:'Read "How seeper Works" (wiki)' },
-  { id:'12', group:'Culture & Process', text:'Attend your first Monday all-hands' },
-  { id:'13', group:'Culture & Process', text:'Add yourself to seeUs directory' },
+const JOURNEY_STEPS = [
+  { id:'1', step: 1, icon: '👋', title: 'Meet the team',       desc: 'Explore the seeUs directory and say hello.',         href: '/team',      color: '#1D9E75' },
+  { id:'2', step: 2, icon: '🎨', title: 'Read brand guide',    desc: 'Get up to speed on the seeper design language.',     href: '/resources', color: '#D4537E' },
+  { id:'3', step: 3, icon: '🛠', title: 'Explore the toolkit', desc: 'See what tools the studio endorses and uses.',       href: '/tools',     color: '#DCFEAD' },
+  { id:'4', step: 4, icon: '💬', title: 'Browse prompts',      desc: 'Try some AI prompts from the library.',              href: '/prompts',   color: '#EDDE5C' },
+  { id:'5', step: 5, icon: '📖', title: 'Read the wiki',       desc: 'Deep dive into how seeper works.',                   href: '/wiki',      color: '#B0A9CF' },
+  { id:'6', step: 6, icon: '✏️', title: 'Complete your profile', desc: 'Add your skills and a photo.',                    href: '/profile',   color: '#ED693A' },
 ]
 
 const KEY_DOCS = [
@@ -47,8 +40,7 @@ export function InsidePageClient() {
     })
   }
 
-  const groups = Array.from(new Set(CHECKLIST.map(i => i.group)))
-  const progress = checked.length / CHECKLIST.length
+  const progress = checked.length / JOURNEY_STEPS.length
 
   return (
     <div className="page-enter">
@@ -63,7 +55,7 @@ export function InsidePageClient() {
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-xs text-[var(--color-muted)]">Onboarding progress</span>
             <span className="text-xs font-bold" style={{ color: 'var(--color-inside)' }}>
-              {checked.length}/{CHECKLIST.length}
+              {checked.length}/{JOURNEY_STEPS.length}
             </span>
           </div>
           <div className="h-2 bg-[var(--color-raised)] rounded-full overflow-hidden">
@@ -75,59 +67,74 @@ export function InsidePageClient() {
         </div>
       </div>
 
-      <div className="flex gap-6">
-        {/* Checklist */}
-        <div className="flex-1 min-w-0 space-y-6">
-          {groups.map(group => (
-            <div key={group}>
-              <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">{group}</h3>
-              <div className="space-y-2">
-                {CHECKLIST.filter(i => i.group === group).map(item => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => toggleItem(item.id)}
-                    className="w-full flex items-center gap-3 py-2.5 px-3 rounded-xl hover:bg-[var(--color-raised)] transition-colors text-left group"
-                  >
-                    <div className={cn(
-                      'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150',
-                      checked.includes(item.id)
-                        ? 'bg-fern border-fern'
-                        : 'border-seeper-border/60 group-hover:border-fern/60'
-                    )}>
-                      {checked.includes(item.id) && <span className="text-seeper-black text-[10px]">✓</span>}
-                    </div>
-                    <span className={cn(
-                      'text-sm transition-all duration-150',
-                      checked.includes(item.id)
-                        ? 'line-through text-[var(--color-muted)]'
-                        : 'text-[var(--color-text)]'
-                    )}>
-                      {item.text}
-                    </span>
-                  </button>
-                ))}
+      {/* Journey steps grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {JOURNEY_STEPS.map(step => {
+          const isChecked = checked.includes(step.id)
+          return (
+            <button
+              key={step.id}
+              type="button"
+              onClick={() => toggleItem(step.id)}
+              className={cn(
+                'seeper-card p-4 text-left w-full transition-all duration-150 relative',
+                isChecked && 'border-l-4'
+              )}
+              style={isChecked ? { borderLeftColor: step.color } : undefined}
+            >
+              {/* Top row: icon + checkbox */}
+              <div className="flex items-start justify-between mb-2">
+                <span className="text-2xl">{step.icon}</span>
+                {/* Checkbox circle */}
+                <div className={cn(
+                  'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-150',
+                  isChecked
+                    ? 'bg-fern border-fern'
+                    : 'border-seeper-border/60'
+                )}>
+                  {isChecked && <span className="text-seeper-black text-[10px]">✓</span>}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Key documents */}
-        <div className="w-64 flex-shrink-0">
-          <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Key documents</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {KEY_DOCS.map(doc => (
-              <Link
-                key={doc.href}
-                href={doc.href}
-                className="seeper-card p-3 flex flex-col gap-1.5 hover:border-[var(--color-inside)]/40 transition-all"
-              >
-                <span className="text-xl">{doc.icon}</span>
-                <span className="text-xs font-bold">{doc.title}</span>
-                <span className="text-[10px] text-[var(--color-muted)]">{doc.desc}</span>
-              </Link>
-            ))}
-          </div>
+              {/* Step label */}
+              <span className="text-[10px] text-[var(--color-muted)] font-medium block mb-0.5">Step {step.step}</span>
+
+              {/* Title */}
+              <span className="font-bold text-sm block">{step.title}</span>
+
+              {/* Description */}
+              <span className="text-xs text-[var(--color-subtext)] mt-1 block">{step.desc}</span>
+
+              {/* Arrow link */}
+              <div className="mt-3 flex justify-end">
+                <Link
+                  href={step.href}
+                  onClick={e => e.stopPropagation()}
+                  className="text-xs text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors"
+                >
+                  →
+                </Link>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Key documents */}
+      <div>
+        <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Key documents</h3>
+        <div className="grid grid-cols-3 gap-3">
+          {KEY_DOCS.map(doc => (
+            <Link
+              key={doc.href}
+              href={doc.href}
+              className="seeper-card p-3 flex flex-col gap-1.5 hover:border-[var(--color-inside)]/40 transition-all"
+            >
+              <span className="text-xl">{doc.icon}</span>
+              <span className="text-xs font-bold">{doc.title}</span>
+              <span className="text-[10px] text-[var(--color-muted)]">{doc.desc}</span>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

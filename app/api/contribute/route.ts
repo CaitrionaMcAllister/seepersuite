@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
     }).select('id').single()
 
     if (error) {
-      console.error('[contribute] Insert error:', error.message)
-      return NextResponse.json({ error: 'Database error' }, { status: 500 })
+      console.error('[contribute] Insert error:', error.message, error.details, error.hint)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, id: data.id })

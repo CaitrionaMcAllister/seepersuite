@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server'
 import { generateDailyDigest } from '@/lib/claude'
+import { fetchNewsForDigest } from '@/lib/news'
 import { MOCK_NEWS, MOCK_DIGEST_STORIES } from '@/lib/constants'
 import { NextRequest, NextResponse } from 'next/server'
 import type { DigestStory } from '@/types'
@@ -24,16 +25,20 @@ export async function GET(req: NextRequest) {
         if (generatedAt > sixHoursAgo) {
           try {
             const stories: DigestStory[] = JSON.parse(cached.content)
-            if (Array.isArray(stories)) return NextResponse.json({ stories, cached: true })
-          } catch {
-            // Fall through to regenerate if content isn't valid JSON stories
-          }
+            if (Array.isArray(stories) && stories.length > 0)
+              return NextResponse.json({ stories, cached: true })
+          } catch { /* fall through */ }
         }
       }
     }
 
-    const headlines = MOCK_NEWS.map(n => `${n.title} (${n.source})`)
-    const stories = await generateDailyDigest(headlines)
+    // Try real RSS news first, fall back to mock headlines
+    const realArticles = await fetchNewsForDigest()
+    const articles = realArticles.length >= 4
+      ? realArticles
+      : MOCK_NEWS.map(n => ({ title: n.title, url: n.sourceUrl, source: n.source, sourceUrl: n.sourceUrl, description: n.summary, publishedAt: n.publishedAt }))
+
+    const stories = await generateDailyDigest(articles)
 
     const content = JSON.stringify(stories)
     const { error: upsertError } = await serviceClient

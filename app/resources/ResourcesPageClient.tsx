@@ -4,8 +4,10 @@ import { useState, useMemo, useEffect } from 'react'
 import { MOCK_RESOURCES } from '@/lib/constants'
 import Avatar from '@/components/ui/Avatar'
 import { cn } from '@/lib/utils'
+import { UpvoteButton } from '@/components/ui/UpvoteButton'
+import { LinkButton } from '@/components/ui/LinkButton'
 
-const CATEGORIES = ['All', 'Documents', 'Links', 'Templates', 'Brand Assets', 'Research']
+const CATEGORIES = ['All', 'Documents', 'Links', 'Templates', 'Brand Assets', 'Research', 'Other']
 const SORTS = ['Date (newest)', 'Category', 'Most upvoted']
 
 const FILE_ICONS: Record<string, string> = {
@@ -132,31 +134,8 @@ function ResourceRow({ resource }: { resource: typeof MOCK_RESOURCES[number] }) 
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button
-          onClick={handleUpvote}
-          className={cn(
-            'flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-all duration-150',
-            voted
-              ? 'border-plasma text-plasma bg-plasma/10'
-              : 'border-seeper-border/40 text-[var(--color-muted)] hover:border-plasma/60'
-          )}
-        >
-          ▲ {upvotes}
-        </button>
-        {resource.url && resource.url !== '#' ? (
-          <a
-            href={resource.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-[10px] px-2.5 py-1 rounded-full border border-seeper-border/40 text-[var(--color-muted)] hover:border-fern/60 hover:text-fern transition-all"
-          >
-            Open ↗
-          </a>
-        ) : (
-          <span className="text-[10px] px-2.5 py-1 rounded-full border border-seeper-border/40 text-[var(--color-muted)] opacity-40">
-            Open ↗
-          </span>
-        )}
+        <UpvoteButton count={upvotes} voted={voted} onClick={handleUpvote} />
+        <LinkButton url={resource.url} />
       </div>
     </div>
   )

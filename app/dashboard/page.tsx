@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import { generateDailyDigest } from '@/lib/claude'
-import { MOCK_NEWS, MOCK_DIGEST_STORIES } from '@/lib/constants'
+import { MOCK_DIGEST_STORIES } from '@/lib/constants'
 import AppShell from '@/components/layout/AppShell'
 import { DailyDigest } from '@/components/dashboard/DailyDigest'
 import QuickLinks from '@/components/dashboard/QuickLinks'
@@ -10,30 +9,57 @@ import NewsletterPreview from '@/components/dashboard/NewsletterPreview'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
 import type { Profile, DigestStory } from '@/types'
 
-async function getTodaysDigest(): Promise<DigestStory[]> {
+// Visual config keyed by news_cache category strings
+const CATEGORY_VISUALS: Record<string, { icon: string; color: string; label: string }> = {
+  'AI & ML':       { icon: '◈', color: '#7F77DD', label: 'AI & ML' },
+  'Spatial':       { icon: '◉', color: '#B0A9CF', label: 'XR / Spatial' },
+  'Immersive':     { icon: '◉', color: '#ED693A', label: 'Immersive' },
+  'Tools':         { icon: '⬡', color: '#DCFEAD', label: 'Tools & Tech' },
+  'Creative Tech': { icon: '✦', color: '#ED693A', label: 'Creative Tech' },
+  'Audio':         { icon: '◎', color: '#8ACB8F', label: 'Audio' },
+  'Industry':      { icon: '◎', color: '#EDDE5C', label: 'Industry' },
+  'Events':        { icon: '◆', color: '#D4537E', label: 'Events' },
+}
+const SOURCE_COLORS = ['#ED693A', '#B0A9CF', '#7F77DD', '#8ACB8F', '#EDDE5C', '#D4537E']
+
+function rgba(hex: string, a: number) {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r},${g},${b},${a})`
+}
+
+async function getFeaturedDigest(): Promise<DigestStory[]> {
   try {
-    const serviceClient = createServiceClient()
-    const today = new Date().toISOString().split('T')[0]
+    const { data } = await createServiceClient()
+      .from('news_cache')
+      .select('id, title, summary, category, source, source_url, url, published_at')
+      .eq('is_featured', true)
+      .order('published_at', { ascending: false })
+      .limit(10)
 
-    const { data: cached } = await serviceClient
-      .from('daily_digest').select('content, generated_at').eq('date', today).single()
+    if (!data || data.length === 0) return MOCK_DIGEST_STORIES
 
-    if (cached) {
-      try {
-        const stories: DigestStory[] = JSON.parse(cached.content)
-        if (Array.isArray(stories) && stories.length > 0) return stories
-      } catch { /* fall through */ }
-    }
-
-    const headlines = MOCK_NEWS.map(n => n.title)
-    const stories = await generateDailyDigest(headlines)
-
-    const { error: upsertError } = await serviceClient
-      .from('daily_digest')
-      .upsert({ content: JSON.stringify(stories), date: today }, { onConflict: 'date' })
-    if (upsertError) console.error('[digest] Cache error:', upsertError.message)
-
-    return stories
+    return data.map((article, i) => {
+      const vis = CATEGORY_VISUALS[article.category ?? ''] ?? { icon: '✦', color: '#ED693A', label: 'News' }
+      return {
+        icon: vis.icon,
+        iconBg: rgba(vis.color, 0.12),
+        iconColor: vis.color,
+        catBg: rgba(vis.color, 0.15),
+        catColor: vis.color,
+        category: article.category ?? 'News',
+        imageLabel: vis.label,
+        title: article.title,
+        summary: article.summary ?? article.title,
+        sources: [{
+          label: article.source,
+          abbreviation: article.source.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+          color: SOURCE_COLORS[i % SOURCE_COLORS.length],
+          url: article.url,
+        }],
+      }
+    })
   } catch {
     return MOCK_DIGEST_STORIES
   }
@@ -52,7 +78,16 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  const stories = await getTodaysDigest()
+  const stories = await getFeaturedDigest()
+
+  // Fetch recent contributions for dashboard widgets
+  const serviceClient = createServiceClient()
+  const { data: contributions } = await serviceClient
+    .from('contributions')
+    .select('id, submitter_name, title, category, submitted_at')
+    .eq('status', 'approved')
+    .order('submitted_at', { ascending: false })
+    .limit(8)
 
   return (
     <AppShell profile={profile as Profile | null}>
@@ -67,12 +102,12 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
           {/* Left column */}
           <div className="flex flex-col gap-6">
-            <WikiUpdates />
+            <WikiUpdates contributions={contributions ?? []} />
             <NewsletterPreview />
           </div>
 
           {/* Right column */}
-          <ActivityFeed />
+          <ActivityFeed contributions={contributions ?? []} />
         </div>
       </div>
     </AppShell>

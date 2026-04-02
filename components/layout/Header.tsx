@@ -2,13 +2,12 @@
 // Must be a Client Component so that date/greeting are computed from the
 // user's actual local time, not frozen at server render / build time.
 import { useMemo, useState, useEffect } from 'react'
+import Link from 'next/link'
 import Avatar from '@/components/ui/Avatar'
 import { SearchModal } from '@/components/ui/SearchModal'
 import { formatDate, getGreeting } from '@/lib/utils'
 import type { Profile } from '@/types'
 import { useTheme } from '@/components/providers/ThemeProvider'
-import { NotificationPanel } from '@/components/ui/NotificationPanel'
-import { useNotifications } from '@/hooks/useNotifications'
 
 interface HeaderProps {
   profile: Profile | null
@@ -18,8 +17,6 @@ export default function Header({ profile }: HeaderProps) {
   const name = profile?.display_name ?? profile?.full_name ?? 'there'
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
-  const [notifOpen, setNotifOpen] = useState(false)
-  const { unreadCount } = useNotifications()
 
   // Compute once per render — these read the client's local clock
   const greeting = useMemo(() => getGreeting(name), [name])
@@ -37,10 +34,10 @@ export default function Header({ profile }: HeaderProps) {
   }, [])
 
   return (
-    <header className="sticky top-0 z-30 bg-seeper-bg/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-30 backdrop-blur-sm" style={{ backgroundColor: 'var(--seeper-bg)' }}>
       <div
-        className="flex items-center justify-between px-8 py-4"
-        style={{ borderBottom: '1px solid rgba(237,105,58,0.4)' }}
+        className="flex items-center justify-between px-8 py-4 border-b border-seeper-border"
+        style={{ borderBottomColor: 'rgba(237,105,58,0.4)' }}
       >
         {/* Left: wordmark */}
         <div>
@@ -64,32 +61,25 @@ export default function Header({ profile }: HeaderProps) {
             🔍 <span className="text-xs">Search</span>
             <span className="ml-2 px-1.5 py-0.5 rounded border border-seeper-border/40 text-[10px]">⌘K</span>
           </button>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setNotifOpen(p => !p)}
-              className="relative w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--color-raised)] transition-colors"
-              aria-label="Notifications"
-            >
-              🔔
-              {unreadCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-plasma" />
-              )}
-            </button>
-            <NotificationPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
-          </div>
           <button
             type="button"
             onClick={toggleTheme}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-seeper-border/40 hover:border-plasma/60 transition-all duration-300"
           >
-            {theme === 'dark' ? '☀ Light' : '☾ Dark'}
+            {theme === 'dark' ? '☾ Dark' : '☀ Light'}
           </button>
-          <Avatar
-            src={profile?.avatar_url}
-            name={profile?.display_name ?? profile?.full_name}
-            size={40}
-          />
+          <Link
+            href="/profile?tab=edit"
+            title="Account settings"
+            className="rounded-full ring-2 ring-transparent hover:ring-plasma/60 transition-all duration-200"
+          >
+            <Avatar
+              src={profile?.avatar_url}
+              name={profile?.display_name ?? profile?.full_name}
+              color={profile?.avatar_color}
+              size={40}
+            />
+          </Link>
         </div>
       </div>
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />

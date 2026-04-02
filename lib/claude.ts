@@ -11,6 +11,46 @@ import 'server-only'
 import Anthropic from '@anthropic-ai/sdk'
 import { MOCK_DIGEST_STORIES } from '@/lib/constants'
 import type { DigestStory, SearchableItem } from '@/types'
+import type { NewsArticle } from '@/lib/news'
+
+// Visual styles for each digest category — applied after Claude returns JSON
+const CATEGORY_VISUALS: Record<string, { icon: string; color: string; imageLabel: string }> = {
+  'AI & Machine Learning': { icon: '◈', color: '#7F77DD', imageLabel: 'AI & ML' },
+  'Creative Technology':   { icon: '✦', color: '#ED693A', imageLabel: 'Creative Tech' },
+  'XR & Immersive':        { icon: '◉', color: '#B0A9CF', imageLabel: 'XR / Immersive' },
+  'Design & Visual':       { icon: '◆', color: '#D4537E', imageLabel: 'Design' },
+  'Business & Industry':   { icon: '◎', color: '#EDDE5C', imageLabel: 'Business' },
+  'Tools & Tech':          { icon: '⬡', color: '#DCFEAD', imageLabel: 'Tools & Tech' },
+}
+
+const SOURCE_COLORS = ['#ED693A', '#B0A9CF', '#7F77DD', '#8ACB8F', '#EDDE5C', '#D4537E']
+
+function applyVisuals(raw: { title: string; summary: string; category: string; sources: { label: string; url: string }[] }): DigestStory {
+  const vis = CATEGORY_VISUALS[raw.category] ?? CATEGORY_VISUALS['Creative Technology']
+  const rgba = (hex: string, a: number) => {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r},${g},${b},${a})`
+  }
+  return {
+    icon: vis.icon,
+    iconBg: rgba(vis.color, 0.12),
+    iconColor: vis.color,
+    catBg: rgba(vis.color, 0.15),
+    catColor: vis.color,
+    category: raw.category,
+    imageLabel: vis.imageLabel,
+    title: raw.title,
+    summary: raw.summary,
+    sources: raw.sources.slice(0, 3).map((s, i) => ({
+      label: s.label,
+      abbreviation: s.label.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(),
+      color: SOURCE_COLORS[i % SOURCE_COLORS.length],
+      url: s.url,
+    })),
+  }
+}
 
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY
@@ -24,23 +64,48 @@ function extractText(response: Anthropic.Message): string {
   return ''
 }
 
-export async function generateDailyDigest(headlines: string[]): Promise<DigestStory[]> {
-  if (headlines.length === 0) return MOCK_DIGEST_STORIES
+export async function generateDailyDigest(articles: NewsArticle[] | string[]): Promise<DigestStory[]> {
+  if (articles.length === 0) return MOCK_DIGEST_STORIES
+
+  // Support legacy string[] calls (from dashboard/page.tsx direct call)
+  const isStrings = typeof articles[0] === 'string'
+  const articleText = isStrings
+    ? (articles as string[]).map((h, i) => `${i + 1}. ${h}`).join('\n')
+    : (articles as NewsArticle[]).map((a, i) =>
+        `${i + 1}. ${a.title}\n   Source: ${a.source} — ${a.url}\n   ${a.description ?? ''}`
+      ).join('\n\n')
 
   try {
     const client = getClient()
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 800,
+      max_tokens: 1200,
       messages: [{
         role: 'user',
-        content: `You are the editorial AI for seeper, an immersive experience design studio. Write 4 brief digest stories from these headlines for the seeper team. Each story should be 2-3 sentences, written in a direct, knowledgeable tone — no fluff. Focus on relevance to immersive experience design, creative technology, and the studio's work.\n\nHeadlines:\n${headlines.join('\n')}\n\nReturn ONLY valid JSON in this exact format, no other text:\n[\n  {\n    "title": "short title",\n    "summary": "2-3 sentence summary relevant to seeper",\n    "sources": ["Source 1"],\n    "category": "AI & ML"\n  }\n]`,
+        content: `You are the editorial AI for seeper, an immersive experience design studio based in London. Pick the 4 most relevant articles from the list below and write a brief digest story for each one, tailored to the seeper team. seeper designs immersive experiences, installations, projection mapping, AR/VR, real-time visuals, and creative technology.
+
+Each story should be 2-3 sentences — direct, knowledgeable, no fluff. Explain why it matters to seeper specifically.
+
+Articles:
+${articleText}
+
+Return ONLY valid JSON, no other text, in this exact format:
+[
+  {
+    "title": "concise title (max 10 words)",
+    "summary": "2-3 sentence summary relevant to seeper's work",
+    "category": "one of: AI & Machine Learning | Creative Technology | XR & Immersive | Design & Visual | Business & Industry | Tools & Tech",
+    "sources": [
+      { "label": "Source Name", "url": "https://exact-article-url" }
+    ]
+  }
+]`,
       }],
     })
     const text = extractText(response)
     const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
     const parsed: unknown = JSON.parse(clean)
-    if (Array.isArray(parsed)) return parsed as DigestStory[]
+    if (Array.isArray(parsed)) return (parsed as { title: string; summary: string; category: string; sources: { label: string; url: string }[] }[]).map(applyVisuals)
     return MOCK_DIGEST_STORIES
   } catch {
     return MOCK_DIGEST_STORIES
