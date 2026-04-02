@@ -37,7 +37,7 @@ interface DailyDigestProps {
 }
 
 export function DailyDigest({ initialStories = [] }: DailyDigestProps) {
-  const [stories, setStories] = useState<DigestStory[]>(initialStories)
+  const [stories] = useState<DigestStory[]>(initialStories)
   const [current, setCurrent] = useState(0)
   const [visible, setVisible] = useState(true)
   const [loading, setLoading] = useState(initialStories.length === 0)
