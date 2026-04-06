@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { MOCK_DIGEST_STORIES } from '@/lib/constants'
+import { fillFeatured } from '@/lib/newsFeatured'
 import AppShell from '@/components/layout/AppShell'
 import { DailyDigest } from '@/components/dashboard/DailyDigest'
 import QuickLinks from '@/components/dashboard/QuickLinks'
@@ -31,17 +32,21 @@ function rgba(hex: string, a: number) {
 
 async function getFeaturedDigest(): Promise<DigestStory[]> {
   try {
+    // Fetch recent articles so fillFeatured can auto-select if fewer than 3 are manually featured
     const { data } = await createServiceClient()
       .from('news_cache')
-      .select('id, title, summary, category, source, source_url, url, published_at')
-      .eq('is_featured', true)
+      .select('id, title, summary, category, source, source_url, url, published_at, is_featured')
       .eq('is_blocked', false)
       .order('published_at', { ascending: false })
-      .limit(10)
+      .limit(50)
 
     if (!data || data.length === 0) return MOCK_DIGEST_STORIES
 
-    return data.map((article, i) => {
+    const filled = fillFeatured(data)
+    const featured = filled.filter(a => a.is_featured).slice(0, 10)
+    if (featured.length === 0) return MOCK_DIGEST_STORIES
+
+    return featured.map((article, i) => {
       const vis = CATEGORY_VISUALS[article.category ?? ''] ?? { icon: '✦', color: '#ED693A', label: 'News' }
       return {
         icon: vis.icon,

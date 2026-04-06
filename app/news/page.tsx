@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import type { Profile } from '@/types'
 import { NewsPageClient } from './NewsPageClient'
 import { ingestIfStale } from '@/lib/newsIngest'
+import { fillFeatured } from '@/lib/newsFeatured'
 
 export default async function NewsPage() {
   const supabase = createClient()
@@ -31,9 +32,11 @@ export default async function NewsPage() {
       .eq('is_blocked', false),
   ])
 
+  const filledArticles = fillFeatured(articles ?? [])
+
   return (
     <AppShell profile={profile as Profile | null}>
-      <NewsPageClient articles={articles ?? []} totalCount={totalCount ?? 0} />
+      <NewsPageClient articles={filledArticles} totalCount={totalCount ?? 0} />
     </AppShell>
   )
 }
