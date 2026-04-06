@@ -112,8 +112,10 @@ function stripHtml(html: string | null | undefined): string | null {
 
 // Patterns that indicate a page/section rather than an article, keyed by source name.
 // Titles matching these are dropped regardless of relevance.
+// Source-specific blocklists — drop non-article pages and boilerplate entries.
+// Checked against title AND description (joined) so content-only junk is also caught.
 const SOURCE_BLOCKLIST: Record<string, RegExp> = {
-  'ExperienceUK': /^(association partners|sponsors|members|about us|join us|contact|events calendar|home|news$|resources$|benefits of membership)|^experience\s*uk$|experience\s*uk$/i,
+  'ExperienceUK': /^(association partners|sponsors|members|about us|join us|contact|events calendar|home|news$|resources$|benefits of membership|latest$)|^experience\s*uk$|experience\s*uk$|is the trade body for|trade body for great british|posted by experience industry experts/i,
 }
 
 // Must match at least one term to be considered relevant to Seeper's domain
@@ -132,9 +134,9 @@ const OFFTOPIC_TITLE_RE =
   /^(review:|best \d|top \d|\d+ best|\d+ ways|how to cook|recipe|workout|fitness tips|horoscope|weather|stock market|real estate|mortgage|car review|new car|electric car|test drive|sports result|match report|transfer news|premier league|nba |nfl |mlb |cricket|tennis|golf|boxing match|celebrity|red carpet|fashion week|runway show|beauty|skincare|makeup|plastic surgery|diet|weight loss|politics|election|congress|senate|parliament|law enforcement|crime|murder|court case|immigration|border|military strike|airstrike|bombing)/i
 
 function isRelevant(title: string, description: string | null, source: string): boolean {
-  // Source-specific blocklist — drop non-article pages from known feeds
+  // Source-specific blocklist — check title + description so boilerplate in either field is caught
   const blocklist = SOURCE_BLOCKLIST[source]
-  if (blocklist && blocklist.test(title.trim())) return false
+  if (blocklist && blocklist.test(`${title} ${description ?? ''}`.trim())) return false
 
   // Off-topic title check — clearly irrelevant regardless of source
   if (OFFTOPIC_TITLE_RE.test(title.trim())) return false
@@ -204,8 +206,7 @@ export async function ingestNews(): Promise<{ inserted: number; skipped: number 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const author    = stripHtml((item as any).creator ?? (item as any).author ?? null)
     const publishedAt = item.isoDate ?? item.pubDate ?? new Date().toISOString()
-    const summary   = description ? description.slice(0, 400) : title
-    const featured  = firstOfBatch
+    const summary = description ? description.slice(0, 400) : title
     firstOfBatch = false
 
     const { error } = await supabase.from('news_cache').upsert({
@@ -220,7 +221,7 @@ export async function ingestNews(): Promise<{ inserted: number; skipped: number 
       image_url: imageUrl,
       published_at: publishedAt,
       fetched_at: new Date().toISOString(),
-      is_featured: featured,
+      // is_featured and is_blocked intentionally excluded — admin flags must never be reset by ingest
     }, { onConflict: 'url', ignoreDuplicates: false })
 
     if (error) {
