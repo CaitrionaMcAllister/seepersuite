@@ -68,9 +68,9 @@ export const NAV_SECTIONS: NavSection[] = [
 export const QUICK_LINKS: readonly QuickLink[] = [
   { label: SECTION_NAMES.news,      href: '/news',      icon: 'Radio',      accent: '#ED693A' },
   { label: SECTION_NAMES.wiki,      href: '/wiki',      icon: 'BookOpen',   accent: '#B0A9CF' },
-  { label: SECTION_NAMES.prompts,   href: '/prompts',   icon: 'Sparkles',   accent: '#EDDE5C' },
   { label: SECTION_NAMES.tools,     href: '/tools',     icon: 'Settings2',  accent: '#DCFEAD' },
   { label: SECTION_NAMES.resources, href: '/resources', icon: 'LayoutGrid', accent: '#8ACB8F' },
+  { label: SECTION_NAMES.prompts,   href: '/prompts',   icon: 'Sparkles',   accent: '#EDDE5C' },
   { label: SECTION_NAMES.team,      href: '/team',      icon: 'Users',      accent: '#1D9E75' },
   { label: SECTION_NAMES.inside,    href: '/inside',    icon: 'Star',       accent: '#D4537E' },
 ]
