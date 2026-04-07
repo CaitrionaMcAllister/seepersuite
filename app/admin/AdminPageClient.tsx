@@ -742,10 +742,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
             <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Accent &amp; hero</p>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
-                { label: 'CTAs & buttons',  var: '--color-cta'       },
-                { label: 'seeNews',         var: '--color-news'      },
-                { label: 'Dashboard',       var: '--color-dashboard' },
-                { label: 'Admin',           var: '--color-admin'     },
+                { label: 'CTAs & buttons', var: '--color-cta' },
               ].map(({ label, var: varName }) => {
                 const current = colorOverrides[varName] ?? DEFAULT_COLORS[varName]
                 return (
@@ -775,12 +772,15 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
             <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Section colours</p>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'seeWiki',      var: '--color-quantum' },
-                { label: 'seeTools',     var: '--color-circuit' },
-                { label: 'seeResources', var: '--color-fern'    },
-                { label: 'seePrompts',   var: '--color-volt'    },
-                { label: 'seeInside',    var: '--color-inside'  },
-                { label: 'seeUs (team)', var: '--color-us'      },
+                { label: 'seeNews',      var: '--color-news'      },
+                { label: 'Dashboard',    var: '--color-dashboard' },
+                { label: 'Admin',        var: '--color-admin'     },
+                { label: 'seeWiki',      var: '--color-quantum'   },
+                { label: 'seeTools',     var: '--color-circuit'   },
+                { label: 'seeResources', var: '--color-fern'      },
+                { label: 'seePrompts',   var: '--color-volt'      },
+                { label: 'seeInside',    var: '--color-inside'    },
+                { label: 'seeUs (team)', var: '--color-us'        },
               ].map(({ label, var: varName }) => {
                 const current = colorOverrides[varName] ?? DEFAULT_COLORS[varName]
                 return (
