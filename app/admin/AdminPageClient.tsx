@@ -4,15 +4,6 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types'
 
-const ACTION_COLORS: Record<string, string> = {
-  created_wiki:         '#B0A9CF',
-  edited_wiki:          '#DCFEAD',
-  added_prompt:         '#EDDE5C',
-  published_newsletter: '#ED693A',
-  contributed:          '#ED693A',
-  upvoted:              '#8ACB8F',
-  signed_in:            '#555555',
-}
 
 const TABS = ['Overview', 'Users', 'Content', 'Sources', 'Settings']
 
@@ -46,11 +37,20 @@ interface WikiPost {
   is_blocked: boolean
 }
 
+interface RecentContribution {
+  id: string
+  title: string
+  category: string
+  submitter_name: string
+  submitted_at: string
+  status: string
+  description: string | null
+}
+
 interface AdminPageClientProps {
   profile: Profile
-  stats: { userCount: number; wikiCount: number; promptCount: number }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  recentActivity: any[]
+  stats: { userCount: number; wikiCount: number; promptCount: number; newsCount: number; toolCount: number; resourceCount: number }
+  recentContributions: RecentContribution[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pendingContributions: any[]
   approvedContributions: WikiPost[]
@@ -58,7 +58,7 @@ interface AdminPageClientProps {
   newsArticles: NewsArticle[]
 }
 
-export function AdminPageClient({ stats, recentActivity, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles }: AdminPageClientProps) {
+export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles }: AdminPageClientProps) {
   const [tab, setTab] = useState('Overview')
   const [digestLoading, setDigestLoading] = useState(false)
   const [digestMessage, setDigestMessage] = useState<string | null>(null)
@@ -298,8 +298,11 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, a
           <div className="grid grid-cols-3 gap-4">
             {[
               { label: 'Total users', value: stats.userCount },
-              { label: 'Wiki pages', value: stats.wikiCount },
-              { label: 'Prompts', value: stats.promptCount },
+              { label: 'seeWiki pages', value: stats.wikiCount },
+              { label: 'seePrompts', value: stats.promptCount },
+              { label: 'seeNews articles', value: stats.newsCount },
+              { label: 'seeTools', value: stats.toolCount },
+              { label: 'seeResources', value: stats.resourceCount },
             ].map(stat => (
               <div key={stat.label} className="seeper-card p-4">
                 <p className="text-xs text-[var(--color-muted)] mb-1">{stat.label}</p>
@@ -309,23 +312,58 @@ export function AdminPageClient({ stats, recentActivity, pendingContributions, a
           </div>
 
           <div>
-            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Recent activity</h3>
-            {recentActivity.length === 0 ? (
-              <p className="text-xs text-[var(--color-muted)]">No activity yet</p>
+            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
+              Recent contributions {recentContributions.filter(c => c.status === 'pending').length > 0 && (
+                <span className="ml-2 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-plasma/20 text-plasma">
+                  {recentContributions.filter(c => c.status === 'pending').length} pending
+                </span>
+              )}
+            </h3>
+            {recentContributions.length === 0 ? (
+              <p className="text-xs text-[var(--color-muted)]">No contributions yet</p>
             ) : (
-              <div className="space-y-1">
-                {recentActivity.slice(0, 20).map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2 text-xs border-b border-seeper-border/20">
-                    <span className="text-[var(--color-muted)] w-32 flex-shrink-0">
-                      {new Date(item.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <span
-                      className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0"
-                      style={{ color: ACTION_COLORS[item.action] ?? '#555', background: `${ACTION_COLORS[item.action] ?? '#555'}1a` }}
-                    >
-                      {item.action?.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-[var(--color-subtext)] truncate">{item.resource_title ?? '—'}</span>
+              <div className="space-y-2">
+                {recentContributions.map((c) => (
+                  <div key={c.id} className="seeper-card p-4 flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span
+                          className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0"
+                          style={{
+                            color: c.status === 'pending' ? '#ED693A' : c.status === 'approved' ? '#8ACB8F' : '#555',
+                            background: c.status === 'pending' ? 'rgba(237,105,58,0.15)' : c.status === 'approved' ? 'rgba(138,203,143,0.15)' : 'rgba(85,85,85,0.15)',
+                          }}
+                        >
+                          {c.status}
+                        </span>
+                        <span className="text-[10px] text-[var(--color-muted)]">
+                          {new Date(c.submitted_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="font-bold text-sm truncate">{c.title}</p>
+                      <p className="text-xs text-[var(--color-muted)]">{c.category} · {c.submitter_name}</p>
+                      {c.description && (
+                        <p className="text-xs text-[var(--color-subtext)] line-clamp-2 mt-0.5">{c.description}</p>
+                      )}
+                    </div>
+                    {c.status === 'pending' && (
+                      <div className="flex gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleContributionAction(c.id, 'approved')}
+                          disabled={actionLoading === c.id}
+                          className="px-3 py-1 rounded-full border border-fern/40 text-fern text-xs hover:bg-fern/10 transition-colors disabled:opacity-50"
+                        >
+                          {actionLoading === c.id ? '…' : 'Approve'}
+                        </button>
+                        <button
+                          onClick={() => handleContributionAction(c.id, 'rejected')}
+                          disabled={actionLoading === c.id}
+                          className="px-3 py-1 rounded-full border border-red-500/40 text-red-400 text-xs hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
