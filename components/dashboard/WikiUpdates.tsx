@@ -4,18 +4,18 @@ import { MOCK_WIKI_UPDATES } from '@/lib/constants'
 import Avatar from '@/components/ui/Avatar'
 
 const CATEGORY_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  creative:     { bg: 'rgba(237,105,58,0.2)',  text: '#ED693A', label: 'Creative' },
-  tech:         { bg: 'rgba(220,254,173,0.2)', text: '#DCFEAD', label: 'Tech' },
-  production:   { bg: 'rgba(176,169,207,0.2)', text: '#B0A9CF', label: 'Production' },
-  business:     { bg: 'rgba(237,222,92,0.2)',  text: '#EDDE5C', label: 'Business' },
-  ai:           { bg: 'rgba(138,203,143,0.2)', text: '#8ACB8F', label: 'AI' },
-  general:      { bg: 'rgba(98,98,98,0.2)',    text: '#C3C3C3', label: 'General' },
-  seeNews:      { bg: 'rgba(237,105,58,0.2)',  text: '#ED693A', label: 'seeNews' },
-  seeWiki:      { bg: 'rgba(176,169,207,0.2)', text: '#B0A9CF', label: 'seeWiki' },
-  seeTools:     { bg: 'rgba(220,254,173,0.2)', text: '#DCFEAD', label: 'seeTools' },
-  seeResources: { bg: 'rgba(138,203,143,0.2)', text: '#8ACB8F', label: 'seeResources' },
-  seePrompts:   { bg: 'rgba(237,222,92,0.2)',  text: '#EDDE5C', label: 'seePrompts' },
-  seeInside:    { bg: 'rgba(212,83,126,0.2)',  text: '#D4537E', label: 'seeInside' },
+  creative:     { bg: 'color-mix(in srgb, var(--color-news) 20%, transparent)',      text: 'var(--color-news)',      label: 'Creative'    },
+  tech:         { bg: 'color-mix(in srgb, var(--color-circuit) 20%, transparent)',   text: 'var(--color-circuit)',   label: 'Tech'        },
+  production:   { bg: 'color-mix(in srgb, var(--color-quantum) 20%, transparent)',   text: 'var(--color-quantum)',   label: 'Production'  },
+  business:     { bg: 'color-mix(in srgb, var(--color-volt) 20%, transparent)',      text: 'var(--color-volt)',      label: 'Business'    },
+  ai:           { bg: 'color-mix(in srgb, var(--color-fern) 20%, transparent)',      text: 'var(--color-fern)',      label: 'AI'          },
+  general:      { bg: 'rgba(98,98,98,0.2)',                                          text: '#C3C3C3',                label: 'General'     },
+  seeNews:      { bg: 'color-mix(in srgb, var(--color-news) 20%, transparent)',      text: 'var(--color-news)',      label: 'seeNews'     },
+  seeWiki:      { bg: 'color-mix(in srgb, var(--color-quantum) 20%, transparent)',   text: 'var(--color-quantum)',   label: 'seeWiki'     },
+  seeTools:     { bg: 'color-mix(in srgb, var(--color-circuit) 20%, transparent)',   text: 'var(--color-circuit)',   label: 'seeTools'    },
+  seeResources: { bg: 'color-mix(in srgb, var(--color-fern) 20%, transparent)',      text: 'var(--color-fern)',      label: 'seeResources'},
+  seePrompts:   { bg: 'color-mix(in srgb, var(--color-volt) 20%, transparent)',      text: 'var(--color-volt)',      label: 'seePrompts'  },
+  seeInside:    { bg: 'color-mix(in srgb, var(--color-inside) 20%, transparent)',    text: 'var(--color-inside)',    label: 'seeInside'   },
 }
 
 interface Contribution {
