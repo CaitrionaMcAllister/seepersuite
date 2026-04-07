@@ -12,6 +12,7 @@ import { NAV_SECTIONS } from '@/lib/constants'
 import Avatar from '@/components/ui/Avatar'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types'
+import { useTheme, DEFAULT_COLORS } from '@/components/providers/ThemeProvider'
 
 // Map icon name strings from constants to actual Lucide components
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -32,12 +33,32 @@ const HREF_COLOR_VAR: Record<string, string> = {
   '/admin':     'var(--color-admin)',
 }
 
-// Light-background palette colors need dark text/icons when active
-const LIGHT_COLOR_VARS = new Set(['var(--color-circuit)', 'var(--color-volt)', 'var(--color-fern)'])
-const DARK_SHADES: Record<string, string> = {
-  'var(--color-circuit)': '#4a7a00',
-  'var(--color-volt)':    '#5a4200',
-  'var(--color-fern)':    '#0a4a20',
+// CSS var name (without var()) for each route — used to resolve actual hex
+const HREF_COLOR_VAR_NAME: Record<string, string> = {
+  '/dashboard': '--color-dashboard',
+  '/news':      '--color-news',
+  '/wiki':      '--color-quantum',
+  '/tools':     '--color-circuit',
+  '/resources': '--color-fern',
+  '/prompts':   '--color-volt',
+  '/inside':    '--color-inside',
+  '/team':      '--color-us',
+  '/admin':     '--color-admin',
+}
+
+// Compute perceived brightness (0–255) from a hex color
+function perceivedBrightness(hex: string): number {
+  const h = hex.replace('#', '')
+  if (h.length < 6) return 128
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return (r * 299 + g * 587 + b * 114) / 1000
+}
+
+// Returns the best contrasting icon color (white or near-black) for a background hex
+function contrastIcon(hex: string): string {
+  return perceivedBrightness(hex) > 160 ? '#111111' : '#ffffff'
 }
 
 interface SidebarProps {
@@ -47,6 +68,7 @@ interface SidebarProps {
 
 export default function Sidebar({ profile, onSignOut }: SidebarProps) {
   const router = useRouter()
+  const { colorOverrides } = useTheme()
 
   async function handleSignOut() {
     if (onSignOut) {
@@ -145,12 +167,15 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
               const isHovered = hoveredHref === item.href && !isActive
 
-              // Resolve nav item color via href for per-route CSS var support
+              // Resolve to CSS var string for inline styles
               const resolvedColor = HREF_COLOR_VAR[item.href] ?? item.color
-              const isLight = LIGHT_COLOR_VARS.has(resolvedColor)
-              const iconColor = isActive
-                ? (isLight ? DARK_SHADES[resolvedColor] : '#ffffff')
-                : resolvedColor
+
+              // Resolve actual hex for brightness computation
+              const varName = HREF_COLOR_VAR_NAME[item.href]
+              const actualHex = (varName && (colorOverrides[varName] ?? DEFAULT_COLORS[varName])) ?? item.color
+
+              // Always compute contrast against the real color so white/light picks stay visible
+              const iconColor = isActive ? contrastIcon(actualHex) : resolvedColor
 
               const iconBg = isActive
                 ? resolvedColor
