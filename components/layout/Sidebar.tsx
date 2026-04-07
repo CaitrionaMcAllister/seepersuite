@@ -19,18 +19,20 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Star, Users, Shield,
 }
 
-// Map hardcoded nav colors to CSS vars so theme editor changes propagate to icons
-const COLOR_TO_VAR: Record<string, string> = {
-  '#ED693A': 'var(--color-plasma)',
-  '#B0A9CF': 'var(--color-quantum)',
-  '#DCFEAD': 'var(--color-circuit)',
-  '#8ACB8F': 'var(--color-fern)',
-  '#EDDE5C': 'var(--color-volt)',
-  '#D4537E': 'var(--color-inside)',
-  '#1D9E75': 'var(--color-us)',
+// Map nav href to CSS var — each route gets its own independently-editable color
+const HREF_COLOR_VAR: Record<string, string> = {
+  '/dashboard': 'var(--color-dashboard)',
+  '/news':      'var(--color-news)',
+  '/wiki':      'var(--color-quantum)',
+  '/tools':     'var(--color-circuit)',
+  '/resources': 'var(--color-fern)',
+  '/prompts':   'var(--color-volt)',
+  '/inside':    'var(--color-inside)',
+  '/team':      'var(--color-us)',
+  '/admin':     'var(--color-admin)',
 }
 
-// Light-background colors need dark text/icons when active
+// Light-background palette colors need dark text/icons when active
 const LIGHT_COLOR_VARS = new Set(['var(--color-circuit)', 'var(--color-volt)', 'var(--color-fern)'])
 const DARK_SHADES: Record<string, string> = {
   'var(--color-circuit)': '#4a7a00',
@@ -87,11 +89,11 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
       <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-plasma)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-cta)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
                 <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="var(--color-plasma)"/>
+                <circle cx="8" cy="8" r="2.2" fill="var(--color-cta)"/>
               </svg>
             </div>
             <div className="min-w-0">
@@ -102,11 +104,11 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         )}
         {collapsed && (
           <Link href="/dashboard" className="mx-auto">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-plasma)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-cta)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
                 <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="var(--color-plasma)"/>
+                <circle cx="8" cy="8" r="2.2" fill="var(--color-cta)"/>
               </svg>
             </div>
           </Link>
@@ -143,8 +145,8 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
               const isHovered = hoveredHref === item.href && !isActive
 
-              // Resolve nav item color to CSS var for theme editor compatibility
-              const resolvedColor = COLOR_TO_VAR[item.color] ?? item.color
+              // Resolve nav item color via href for per-route CSS var support
+              const resolvedColor = HREF_COLOR_VAR[item.href] ?? item.color
               const isLight = LIGHT_COLOR_VARS.has(resolvedColor)
               const iconColor = isActive
                 ? (isLight ? DARK_SHADES[resolvedColor] : '#ffffff')

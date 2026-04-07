@@ -273,7 +273,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
   return (
     <div className="page-enter">
       <div className="mb-6">
-        <h1 className="text-xl font-black text-plasma">Admin</h1>
+        <h1 className="text-xl font-black" style={{ color: 'var(--color-admin)' }}>Admin</h1>
         <p className="text-xs text-[var(--color-muted)] mt-1">seeper wiki control panel</p>
       </div>
 
@@ -286,7 +286,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
             className={cn(
               'px-4 py-2 text-sm font-medium transition-all duration-150 border-b-2 -mb-px',
               tab === t
-                ? 'border-plasma text-plasma'
+                ? 'border-[var(--color-admin)] text-[var(--color-admin)]'
                 : 'border-transparent text-[var(--color-muted)] hover:text-[var(--color-text)]'
             )}
           >
@@ -738,11 +738,14 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
             </div>
             <p className="text-xs text-[var(--color-muted)] mb-5">Changes apply instantly and persist across sessions. Sidebar icons, section headers, and badges all update.</p>
 
-            {/* Accent */}
+            {/* Accent & hero */}
             <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Accent &amp; hero</p>
             <div className="grid grid-cols-2 gap-3 mb-5">
               {[
-                { label: 'Plasma (CTAs, admin, seeNews)', var: '--color-plasma' },
+                { label: 'CTAs & buttons',  var: '--color-cta'       },
+                { label: 'seeNews',         var: '--color-news'      },
+                { label: 'Dashboard',       var: '--color-dashboard' },
+                { label: 'Admin',           var: '--color-admin'     },
               ].map(({ label, var: varName }) => {
                 const current = colorOverrides[varName] ?? DEFAULT_COLORS[varName]
                 return (

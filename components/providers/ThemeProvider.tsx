@@ -5,7 +5,12 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 type Theme = 'dark' | 'light'
 
 export const DEFAULT_COLORS: Record<string, string> = {
-  '--color-plasma':    '#ED693A',
+  // Accent & hero — independently editable
+  '--color-cta':       '#ED693A',
+  '--color-dashboard': '#ED693A',
+  '--color-news':      '#ED693A',
+  '--color-admin':     '#ED693A',
+  // Section palette
   '--color-quantum':   '#B0A9CF',
   '--color-circuit':   '#DCFEAD',
   '--color-fern':      '#8ACB8F',
@@ -13,13 +18,6 @@ export const DEFAULT_COLORS: Record<string, string> = {
   '--color-inside':    '#D4537E',
   '--color-us':        '#1D9E75',
 }
-
-// Section colors cascade from palette vars — updated in globals.css
-// --color-news      = var(--color-plasma)
-// --color-wiki      = var(--color-quantum)
-// --color-tools     = var(--color-circuit)
-// --color-resources = var(--color-fern)
-// --color-prompts   = var(--color-volt)
 
 const STORAGE_KEY = 'seeperwiki-colors'
 

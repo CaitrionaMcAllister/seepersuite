@@ -42,7 +42,7 @@ export default function Header({ profile }: HeaderProps) {
         {/* Left: wordmark */}
         <div>
           <div className="font-display font-light text-seeper-white text-2xl leading-none">
-            seeper<span className="text-plasma">●</span>
+            seeper<span style={{ color: 'var(--color-cta)' }}>●</span>
           </div>
           <div className="text-quantum text-sm font-display">wiki</div>
         </div>

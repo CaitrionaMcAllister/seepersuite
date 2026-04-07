@@ -15,7 +15,7 @@
   --color-muted: #555555;
 
   /* Palette colours — editable via admin theme editor */
-  --color-plasma:    #ED693A;
+  --color-plasma:    #ED693A;  /* kept for any residual tailwind plasma classes */
   --color-quantum:   #B0A9CF;
   --color-circuit:   #DCFEAD;
   --color-fern:      #8ACB8F;
@@ -24,13 +24,17 @@
   --color-us:        #1D9E75;
   --color-labs:      #7F77DD;
 
+  /* Accent & hero — each independently editable */
+  --color-cta:       #ED693A;  /* buttons, links, interactive accent */
+  --color-dashboard: #ED693A;  /* dashboard nav + header identity */
+  --color-news:      #ED693A;  /* seeNews section */
+  --color-admin:     #ED693A;  /* admin panel accent */
+
   /* Section colours — cascade from palette */
-  --color-news:      var(--color-plasma);
   --color-wiki:      var(--color-quantum);
   --color-tools:     var(--color-circuit);
   --color-resources: var(--color-fern);
   --color-prompts:   var(--color-volt);
-  --color-dashboard: var(--color-plasma);
 
   /* Tailwind seeper-* aliases — dark values */
   --seeper-bg:      #0d0d0d;
