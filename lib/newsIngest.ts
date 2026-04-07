@@ -169,8 +169,6 @@ export async function ingestNews(): Promise<{ inserted: number; skipped: number 
   const supabase = createServiceClient()
   let inserted = 0
   let skipped = 0
-  let firstOfBatch = true
-
   const results = await Promise.allSettled(
     feeds.map(async ({ url, source, sourceUrl }) => {
       try {
@@ -207,7 +205,6 @@ export async function ingestNews(): Promise<{ inserted: number; skipped: number 
     const author    = stripHtml((item as any).creator ?? (item as any).author ?? null)
     const publishedAt = item.isoDate ?? item.pubDate ?? new Date().toISOString()
     const summary = description ? description.slice(0, 400) : title
-    firstOfBatch = false
 
     const { error } = await supabase.from('news_cache').upsert({
       title,
