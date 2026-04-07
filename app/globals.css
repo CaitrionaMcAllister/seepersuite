@@ -14,16 +14,23 @@
   --color-subtext: #aaaaaa;
   --color-muted: #555555;
 
-  /* Section colours */
-  --color-news: #ED693A;
-  --color-wiki: #B0A9CF;
-  --color-tools: #DCFEAD;
-  --color-resources: #8ACB8F;
-  --color-prompts: #EDDE5C;
-  --color-inside: #D4537E;
-  --color-us: #1D9E75;
-  --color-labs: #7F77DD;
-  --color-dashboard: #ED693A;
+  /* Palette colours — editable via admin theme editor */
+  --color-plasma:    #ED693A;
+  --color-quantum:   #B0A9CF;
+  --color-circuit:   #DCFEAD;
+  --color-fern:      #8ACB8F;
+  --color-volt:      #EDDE5C;
+  --color-inside:    #D4537E;
+  --color-us:        #1D9E75;
+  --color-labs:      #7F77DD;
+
+  /* Section colours — cascade from palette */
+  --color-news:      var(--color-plasma);
+  --color-wiki:      var(--color-quantum);
+  --color-tools:     var(--color-circuit);
+  --color-resources: var(--color-fern);
+  --color-prompts:   var(--color-volt);
+  --color-dashboard: var(--color-plasma);
 
   /* Tailwind seeper-* aliases — dark values */
   --seeper-bg:      #0d0d0d;

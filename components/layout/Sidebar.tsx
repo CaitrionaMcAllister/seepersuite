@@ -19,12 +19,23 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Star, Users, Shield,
 }
 
-// Change 1 — NAV ICON COLOUR SYSTEM
-const LIGHT_COLORS = new Set(['#DCFEAD', '#EDDE5C', '#8ACB8F'])
+// Map hardcoded nav colors to CSS vars so theme editor changes propagate to icons
+const COLOR_TO_VAR: Record<string, string> = {
+  '#ED693A': 'var(--color-plasma)',
+  '#B0A9CF': 'var(--color-quantum)',
+  '#DCFEAD': 'var(--color-circuit)',
+  '#8ACB8F': 'var(--color-fern)',
+  '#EDDE5C': 'var(--color-volt)',
+  '#D4537E': 'var(--color-inside)',
+  '#1D9E75': 'var(--color-us)',
+}
+
+// Light-background colors need dark text/icons when active
+const LIGHT_COLOR_VARS = new Set(['var(--color-circuit)', 'var(--color-volt)', 'var(--color-fern)'])
 const DARK_SHADES: Record<string, string> = {
-  '#DCFEAD': '#4a7a00',
-  '#EDDE5C': '#5a4200',
-  '#8ACB8F': '#0a4a20',
+  'var(--color-circuit)': '#4a7a00',
+  'var(--color-volt)':    '#5a4200',
+  'var(--color-fern)':    '#0a4a20',
 }
 
 interface SidebarProps {
@@ -76,11 +87,11 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
       <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
         {!collapsed && (
           <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#ED693A', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-plasma)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
                 <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="#ED693A"/>
+                <circle cx="8" cy="8" r="2.2" fill="var(--color-plasma)"/>
               </svg>
             </div>
             <div className="min-w-0">
@@ -91,11 +102,11 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         )}
         {collapsed && (
           <Link href="/dashboard" className="mx-auto">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: '#ED693A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-plasma)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
                 <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="#ED693A"/>
+                <circle cx="8" cy="8" r="2.2" fill="var(--color-plasma)"/>
               </svg>
             </div>
           </Link>
@@ -132,24 +143,25 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
               const isHovered = hoveredHref === item.href && !isActive
 
-              // Change 1 — icon colour logic
-              const isLight = LIGHT_COLORS.has(item.color)
+              // Resolve nav item color to CSS var for theme editor compatibility
+              const resolvedColor = COLOR_TO_VAR[item.color] ?? item.color
+              const isLight = LIGHT_COLOR_VARS.has(resolvedColor)
               const iconColor = isActive
-                ? (isLight ? DARK_SHADES[item.color] : '#ffffff')
-                : item.color
+                ? (isLight ? DARK_SHADES[resolvedColor] : '#ffffff')
+                : resolvedColor
 
               const iconBg = isActive
-                ? item.color
+                ? resolvedColor
                 : isHovered
-                  ? `color-mix(in srgb, ${item.color} 28%, transparent)`
-                  : `color-mix(in srgb, ${item.color} 16%, transparent)`
+                  ? `color-mix(in srgb, ${resolvedColor} 28%, transparent)`
+                  : `color-mix(in srgb, ${resolvedColor} 16%, transparent)`
 
               const itemStyle = isActive ? {
-                borderLeftColor: item.color,
-                backgroundColor: `${item.color}14`,
+                borderLeftColor: resolvedColor,
+                backgroundColor: `color-mix(in srgb, ${resolvedColor} 8%, transparent)`,
               } : {}
 
-              const textStyle = isActive ? { color: item.color } : {}
+              const textStyle = isActive ? { color: resolvedColor } : {}
 
               return (
                 <Link

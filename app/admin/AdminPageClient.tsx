@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { Profile } from '@/types'
+import { useTheme, DEFAULT_COLORS } from '@/components/providers/ThemeProvider'
 
 
 const TABS = ['Overview', 'Users', 'Content', 'Sources', 'Settings']
@@ -253,6 +254,8 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
       setActionLoading(null)
     }
   }
+
+  const { colorOverrides, setColor, resetColors } = useTheme()
 
   const triggerDigest = async () => {
     setDigestLoading(true)
@@ -721,6 +724,87 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
       {/* Settings tab */}
       {tab === 'Settings' && (
         <div className="space-y-4">
+
+          {/* Theme / Colour Editor */}
+          <div className="seeper-card p-5">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-bold text-sm">Theme colours</h3>
+              <button
+                onClick={resetColors}
+                className="text-[10px] text-[var(--color-muted)] hover:text-[var(--color-text)] transition-colors px-2 py-1 rounded border border-seeper-border/40 hover:border-seeper-border"
+              >
+                Reset to defaults
+              </button>
+            </div>
+            <p className="text-xs text-[var(--color-muted)] mb-5">Changes apply instantly and persist across sessions. Sidebar icons, section headers, and badges all update.</p>
+
+            {/* Accent */}
+            <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Accent &amp; hero</p>
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              {[
+                { label: 'Plasma (CTAs, admin, seeNews)', var: '--color-plasma' },
+              ].map(({ label, var: varName }) => {
+                const current = colorOverrides[varName] ?? DEFAULT_COLORS[varName]
+                return (
+                  <label key={varName} className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex-shrink-0">
+                      <div
+                        className="w-8 h-8 rounded-lg border-2 border-seeper-border/60 group-hover:border-seeper-border transition-colors"
+                        style={{ background: current }}
+                      />
+                      <input
+                        type="color"
+                        value={current}
+                        onChange={e => setColor(varName, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-[var(--color-text)] truncate">{label}</p>
+                      <p className="text-[10px] text-[var(--color-muted)] font-mono">{current}</p>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+
+            {/* Section colours */}
+            <p className="text-[10px] font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Section colours</p>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label: 'seeWiki',      var: '--color-quantum' },
+                { label: 'seeTools',     var: '--color-circuit' },
+                { label: 'seeResources', var: '--color-fern'    },
+                { label: 'seePrompts',   var: '--color-volt'    },
+                { label: 'seeInside',    var: '--color-inside'  },
+                { label: 'seeUs (team)', var: '--color-us'      },
+              ].map(({ label, var: varName }) => {
+                const current = colorOverrides[varName] ?? DEFAULT_COLORS[varName]
+                return (
+                  <label key={varName} className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative flex-shrink-0">
+                      <div
+                        className="w-8 h-8 rounded-lg border-2 border-seeper-border/60 group-hover:border-seeper-border transition-colors"
+                        style={{ background: current }}
+                      />
+                      <input
+                        type="color"
+                        value={current}
+                        onChange={e => setColor(varName, e.target.value)}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-[var(--color-text)] truncate">{label}</p>
+                      <p className="text-[10px] text-[var(--color-muted)] font-mono">{current}</p>
+                    </div>
+                  </label>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Daily Digest */}
           <div className="seeper-card p-5">
             <h3 className="font-bold text-sm mb-1">Daily Digest</h3>
             <p className="text-xs text-[var(--color-muted)] mb-4">Force-regenerate today&apos;s digest using Claude</p>
@@ -735,6 +819,8 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
               {digestLoading ? 'Generating…' : 'Regenerate Digest'}
             </button>
           </div>
+
+          {/* News Feed */}
           <div className="seeper-card p-5">
             <h3 className="font-bold text-sm mb-1">News Feed</h3>
             <p className="text-xs text-[var(--color-muted)] mb-4">Force-fetch latest articles from all RSS feeds into seeNews</p>

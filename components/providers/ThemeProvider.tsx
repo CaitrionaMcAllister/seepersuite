@@ -1,27 +1,72 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 
 type Theme = 'dark' | 'light'
+
+export const DEFAULT_COLORS: Record<string, string> = {
+  '--color-plasma':    '#ED693A',
+  '--color-quantum':   '#B0A9CF',
+  '--color-circuit':   '#DCFEAD',
+  '--color-fern':      '#8ACB8F',
+  '--color-volt':      '#EDDE5C',
+  '--color-inside':    '#D4537E',
+  '--color-us':        '#1D9E75',
+}
+
+// Section colors cascade from palette vars — updated in globals.css
+// --color-news      = var(--color-plasma)
+// --color-wiki      = var(--color-quantum)
+// --color-tools     = var(--color-circuit)
+// --color-resources = var(--color-fern)
+// --color-prompts   = var(--color-volt)
+
+const STORAGE_KEY = 'seeperwiki-colors'
+
+function applyColors(overrides: Record<string, string>) {
+  const root = document.documentElement
+  // Reset all to defaults first
+  Object.entries(DEFAULT_COLORS).forEach(([k, v]) => root.style.setProperty(k, v))
+  // Apply overrides
+  Object.entries(overrides).forEach(([k, v]) => root.style.setProperty(k, v))
+}
 
 interface ThemeContextValue {
   theme: Theme
   toggleTheme: () => void
+  colorOverrides: Record<string, string>
+  setColor: (varName: string, hex: string) => void
+  resetColors: () => void
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
   toggleTheme: () => {},
+  colorOverrides: {},
+  setColor: () => {},
+  resetColors: () => {},
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark')
+  const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({})
 
   useEffect(() => {
-    const stored = localStorage.getItem('seeper-theme') as Theme | null
-    const initial = stored ?? 'dark'
+    // Dark/light mode
+    const storedTheme = localStorage.getItem('seeper-theme') as Theme | null
+    const initial = storedTheme ?? 'dark'
     setTheme(initial)
     document.documentElement.classList.toggle('light', initial === 'light')
+
+    // Section color overrides
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY)
+      const overrides: Record<string, string> = stored ? JSON.parse(stored) : {}
+      setColorOverrides(overrides)
+      applyColors(overrides)
+    } catch {
+      applyColors({})
+    }
   }, [])
 
   function toggleTheme() {
@@ -33,8 +78,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     })
   }
 
+  const setColor = useCallback((varName: string, hex: string) => {
+    setColorOverrides(prev => {
+      const next = { ...prev, [varName]: hex }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      applyColors(next)
+      return next
+    })
+  }, [])
+
+  const resetColors = useCallback(() => {
+    setColorOverrides({})
+    localStorage.removeItem(STORAGE_KEY)
+    applyColors({})
+  }, [])
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, colorOverrides, setColor, resetColors }}>
       {children}
     </ThemeContext.Provider>
   )
