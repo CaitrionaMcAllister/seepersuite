@@ -82,6 +82,16 @@ export default async function WikiSlugPage({ params }: { params: { slug: string 
             </div>
 
             <div className="w-56 flex-shrink-0 space-y-6">
+              {profile?.role === 'admin' && (
+                <div className="flex flex-col gap-2">
+                  <Link
+                    href={`/wiki/edit/contribution-${contribution.id}`}
+                    className="text-center py-2 px-4 rounded-lg border border-seeper-border/40 text-xs hover:border-quantum/60 transition-colors"
+                  >
+                    Edit page
+                  </Link>
+                </div>
+              )}
               {related.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
