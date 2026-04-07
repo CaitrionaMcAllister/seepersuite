@@ -19,9 +19,17 @@ export async function PATCH(req: NextRequest) {
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
     const update: Record<string, unknown> = {}
-    if (body.status && ['approved', 'rejected'].includes(body.status)) update.status = body.status
+    if (body.status && ['pending', 'approved', 'rejected'].includes(body.status)) update.status = body.status
     if (typeof body.is_featured === 'boolean') update.is_featured = body.is_featured
     if (typeof body.is_blocked === 'boolean') update.is_blocked = body.is_blocked
+    // Full edit fields
+    if (typeof body.title === 'string') update.title = body.title
+    if (typeof body.category === 'string') update.category = body.category
+    if (typeof body.description === 'string') update.description = body.description
+    if (Array.isArray(body.tags)) update.tags = body.tags
+    if ('url' in body) update.url = body.url ?? null
+    if (typeof body.submitter_name === 'string') update.submitter_name = body.submitter_name
+    if (typeof body.submitted_at === 'string') update.submitted_at = body.submitted_at
     if (Object.keys(update).length === 0) return NextResponse.json({ error: 'no valid fields' }, { status: 400 })
 
     const { error } = await createServiceClient().from('contributions').update(update).eq('id', id)
