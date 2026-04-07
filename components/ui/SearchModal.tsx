@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import type { SearchableItem } from '@/types'
 import { MOCK_SEARCH_ITEMS } from '@/lib/constants'
+import { createClient } from '@/lib/supabase/client'
 
 const FILTER_SECTIONS = [
   'All','seeNews','seeWiki','seeTools','seeResources','seePrompts','seeInside',
@@ -32,17 +33,41 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<string[]>(['All'])
   const [results, setResults] = useState<SearchableItem[]>([])
+  const [allItems, setAllItems] = useState<SearchableItem[]>(MOCK_SEARCH_ITEMS)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
-  // Autofocus on open
+  // Fetch contributions from Supabase and merge into search pool on open
   useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 50)
-      setQuery('')
-      setResults([])
-      setActiveFilters(['All'])
-    }
+    if (!open) return
+    setTimeout(() => inputRef.current?.focus(), 50)
+    setQuery('')
+    setResults([])
+    setActiveFilters(['All'])
+
+    const supabase = createClient()
+    supabase
+      .from('contributions')
+      .select('id, submitter_name, title, category, description, tags, submitted_at, status')
+      .neq('status', 'rejected')
+      .order('submitted_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (!data?.length) return
+        const contributionItems: SearchableItem[] = data.map(c => ({
+          id: `contribution-${c.id}`,
+          title: c.title,
+          description: c.description,
+          tags: c.tags ?? [],
+          section: 'seeWiki',
+          sectionColor: '#B0A9CF',
+          href: `/wiki/contribution-${c.id}`,
+          category: c.category,
+          author: c.submitter_name,
+          excerpt: c.description,
+        }))
+        setAllItems([...contributionItems, ...MOCK_SEARCH_ITEMS])
+      })
   }, [open])
 
   // Debounced client-side search
@@ -50,7 +75,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
     if (!query.trim()) { setResults([]); return }
     const timer = setTimeout(() => {
       const q = query.toLowerCase()
-      const filtered = MOCK_SEARCH_ITEMS.filter(item => {
+      const filtered = allItems.filter(item => {
         const matchesQuery =
           item.title.toLowerCase().includes(q) ||
           item.description?.toLowerCase().includes(q) ||
@@ -67,7 +92,7 @@ export function SearchModal({ open, onClose }: SearchModalProps) {
       setResults(filtered)
     }, 200)
     return () => clearTimeout(timer)
-  }, [query, activeFilters])
+  }, [query, activeFilters, allItems])
 
   // Close on Escape
   useEffect(() => {
