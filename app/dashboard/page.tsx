@@ -9,6 +9,7 @@ import WikiUpdates from '@/components/dashboard/WikiUpdates'
 import NewsletterPreview from '@/components/dashboard/NewsletterPreview'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
 import WordOfDay from '@/components/dashboard/WordOfDay'
+import GameOfDay from '@/components/dashboard/GameOfDay'
 import type { Profile, DigestStory } from '@/types'
 
 // Visual config keyed by news_cache category strings
@@ -106,8 +107,11 @@ export default async function DashboardPage() {
         {/* Quick links */}
         <QuickLinks />
 
-        {/* Word of the day */}
-        <WordOfDay />
+        {/* Word of the day + Game of the day */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <WordOfDay />
+          <GameOfDay />
+        </div>
 
         {/* Two-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
