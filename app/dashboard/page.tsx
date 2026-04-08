@@ -8,6 +8,7 @@ import QuickLinks from '@/components/dashboard/QuickLinks'
 import WikiUpdates from '@/components/dashboard/WikiUpdates'
 import NewsletterPreview from '@/components/dashboard/NewsletterPreview'
 import ActivityFeed from '@/components/dashboard/ActivityFeed'
+import WordOfDay from '@/components/dashboard/WordOfDay'
 import type { Profile, DigestStory } from '@/types'
 
 // Visual config keyed by news_cache category strings
@@ -104,6 +105,9 @@ export default async function DashboardPage() {
 
         {/* Quick links */}
         <QuickLinks />
+
+        {/* Word of the day */}
+        <WordOfDay />
 
         {/* Two-column grid */}
         <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
