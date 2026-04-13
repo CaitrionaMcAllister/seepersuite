@@ -1,3 +1,5 @@
+'use client'
+
 import { getWordOfDay } from '@/lib/wordOfDay'
 
 export default function WordOfDay() {
