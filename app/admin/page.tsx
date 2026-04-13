@@ -23,6 +23,8 @@ export default async function AdminPage() {
     { data: recentContributions },
     { data: newsSources },
     { data: newsArticles },
+    { data: profiles },
+    authUsersResult,
   ] = await Promise.all([
     serviceClient.from('profiles').select('*', { count: 'exact', head: true }),
     serviceClient.from('contributions').select('*', { count: 'exact', head: true }).neq('status', 'rejected'),
@@ -32,7 +34,16 @@ export default async function AdminPage() {
     serviceClient.from('contributions').select('id, title, category, submitter_name, submitted_at, status, description').order('submitted_at', { ascending: false }).limit(20),
     serviceClient.from('news_sources').select('*').order('created_at', { ascending: true }),
     serviceClient.from('news_cache').select('id, title, url, source, category, published_at, is_featured, is_blocked').order('published_at', { ascending: false }).limit(100),
+    serviceClient.from('profiles').select('id, full_name, display_name, role, job_title, department, created_at').order('created_at', { ascending: true }),
+    serviceClient.auth.admin.listUsers({ perPage: 1000 }),
   ])
+
+  // Join profiles with auth emails
+  const emailMap: Record<string, string> = {}
+  for (const u of authUsersResult.data?.users ?? []) {
+    emailMap[u.id] = u.email ?? ''
+  }
+  const users = (profiles ?? []).map(p => ({ ...p, email: emailMap[p.id] ?? '' }))
 
   const wikiCount = (contributionCount ?? 0) + MOCK_WIKI_PAGES.length
   const promptCount = MOCK_PROMPTS.length
@@ -49,6 +60,7 @@ export default async function AdminPage() {
         approvedContributions={approvedContributions ?? []}
         newsSources={newsSources ?? []}
         newsArticles={newsArticles ?? []}
+        users={users}
       />
     </AppShell>
   )

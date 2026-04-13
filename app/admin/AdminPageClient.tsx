@@ -48,6 +48,17 @@ interface RecentContribution {
   description: string | null
 }
 
+interface AdminUser {
+  id: string
+  full_name: string | null
+  display_name: string | null
+  role: string | null
+  job_title: string | null
+  department: string | null
+  created_at: string
+  email: string
+}
+
 interface AdminPageClientProps {
   profile: Profile
   stats: { userCount: number; wikiCount: number; promptCount: number; newsCount: number; toolCount: number; resourceCount: number }
@@ -57,9 +68,10 @@ interface AdminPageClientProps {
   approvedContributions: WikiPost[]
   newsSources: NewsSource[]
   newsArticles: NewsArticle[]
+  users: AdminUser[]
 }
 
-export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles }: AdminPageClientProps) {
+export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles, users }: AdminPageClientProps) {
   const [tab, setTab] = useState('Overview')
   const [digestLoading, setDigestLoading] = useState(false)
   const [digestMessage, setDigestMessage] = useState<string | null>(null)
@@ -378,11 +390,53 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
       {/* Users tab */}
       {tab === 'Users' && (
         <div>
-          <p className="text-xs text-[var(--color-muted)] mb-4">User management requires Supabase connection. Connect your database to manage users here.</p>
-          <div className="seeper-card p-6 text-center">
-            <p className="text-sm text-[var(--color-subtext)]">
-              {stats.userCount} registered users
-            </p>
+          <p className="text-xs text-[var(--color-muted)] mb-4">{users.length} registered users</p>
+          <div className="seeper-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-seeper-border/40">
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Name</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Email</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Job Title</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Department</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Role</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">Joined</th>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-wider text-[var(--color-muted)] px-4 py-3">ID</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u, i) => (
+                    <tr
+                      key={u.id}
+                      className={cn('border-b border-seeper-border/20 last:border-0', i % 2 === 0 ? '' : 'bg-white/[0.015]')}
+                    >
+                      <td className="px-4 py-3 font-medium text-[var(--color-text)] whitespace-nowrap">
+                        {u.full_name || u.display_name || <span className="text-[var(--color-muted)]">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-subtext)] whitespace-nowrap">{u.email || <span className="text-[var(--color-muted)]">—</span>}</td>
+                      <td className="px-4 py-3 text-[var(--color-subtext)] whitespace-nowrap">{u.job_title || <span className="text-[var(--color-muted)]">—</span>}</td>
+                      <td className="px-4 py-3 text-[var(--color-subtext)] whitespace-nowrap">{u.department || <span className="text-[var(--color-muted)]">—</span>}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span
+                          className="pill-tag text-[10px]"
+                          style={u.role === 'admin'
+                            ? { background: 'color-mix(in srgb, var(--color-admin) 15%, transparent)', color: 'var(--color-admin)', border: '1px solid color-mix(in srgb, var(--color-admin) 30%, transparent)' }
+                            : { background: 'color-mix(in srgb, var(--color-muted) 10%, transparent)', color: 'var(--color-muted)', border: '1px solid color-mix(in srgb, var(--color-muted) 20%, transparent)' }
+                          }
+                        >
+                          {u.role || 'user'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-muted)] text-xs whitespace-nowrap">
+                        {new Date(u.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </td>
+                      <td className="px-4 py-3 text-[var(--color-muted)] text-[10px] font-mono whitespace-nowrap">{u.id}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

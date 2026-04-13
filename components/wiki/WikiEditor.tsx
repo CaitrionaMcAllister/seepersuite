@@ -41,6 +41,7 @@ export function WikiEditor({
   const [activeTemplate, setActiveTemplate] = useState<TemplateName>('blank')
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [publishMode, setPublishMode] = useState<null | 'confirm' | 'success'>(null)
+  const [publishError, setPublishError] = useState<string | null>(null)
   const [publishedSlug, setPublishedSlug] = useState<string | undefined>(slug)
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const titleRef = useRef<HTMLTextAreaElement>(null)
@@ -136,25 +137,32 @@ export function WikiEditor({
   }
 
   const handlePublish = async () => {
+    setPublishError(null)
     const method = publishedSlug ? 'PATCH' : 'POST'
     const url = publishedSlug ? `/api/wiki/${publishedSlug}` : '/api/wiki'
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        slug: publishedSlug,
-        title: title.trim(),
-        content: editor?.getHTML() ?? '',
-        content_json: editor?.getJSON() ?? null,
-        category,
-        tags,
-        published: visibility !== 'draft',
-      }),
-    })
-    if (res.ok) {
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          slug: publishedSlug,
+          title: title.trim(),
+          content: editor?.getHTML() ?? '',
+          content_json: editor?.getJSON() ?? null,
+          category,
+          tags,
+          published: visibility !== 'draft',
+        }),
+      })
       const data = await res.json()
+      if (!res.ok) {
+        setPublishError(data.error ?? `Publish failed (${res.status})`)
+        return
+      }
       setPublishedSlug(data.slug)
       setPublishMode('success')
+    } catch {
+      setPublishError('Network error — could not reach the server')
     }
   }
 
@@ -321,10 +329,11 @@ export function WikiEditor({
           tags={tags}
           authorName={profile?.display_name ?? profile?.full_name ?? null}
           visibility={visibility}
-          onCancel={() => setPublishMode(null)}
+          onCancel={() => { setPublishMode(null); setPublishError(null) }}
           onConfirm={handlePublish}
           mode={publishMode}
           publishedSlug={publishedSlug}
+          error={publishError}
         />
       )}
     </div>

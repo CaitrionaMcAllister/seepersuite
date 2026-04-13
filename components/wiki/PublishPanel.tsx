@@ -12,11 +12,12 @@ interface PublishPanelProps {
   onConfirm: () => Promise<void>
   mode: 'confirm' | 'success'
   publishedSlug?: string
+  error?: string | null
 }
 
 export function PublishPanel({
   title, category, tags, authorName, visibility,
-  onCancel, onConfirm, mode,
+  onCancel, onConfirm, mode, error,
 }: PublishPanelProps) {
   const router = useRouter()
 
@@ -158,6 +159,23 @@ export function PublishPanel({
             </div>
           ))}
         </div>
+
+        {/* Error message */}
+        {error && (
+          <div
+            style={{
+              background: 'rgba(237,105,58,0.12)',
+              border: '1px solid rgba(237,105,58,0.3)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              marginBottom: 12,
+              fontSize: 12,
+              color: '#ED693A',
+            }}
+          >
+            {error}
+          </div>
+        )}
 
         {/* Buttons */}
         <div className="flex gap-2">
