@@ -87,7 +87,15 @@ export function WikiEditorPage({
             placeholder="Page title"
             className="w-full bg-transparent border-b-2 border-seeper-border/60 focus:border-quantum/60 pb-2 text-2xl font-bold font-display outline-none transition-colors"
           />
-          <WikiEditor content={content} onChange={setContent} placeholder="Start writing your page…" />
+          <WikiEditor
+            profile={null}
+            initialTitle={title}
+            initialContent={content}
+            initialCategory={category as import('@/types').WikiCategory}
+            initialTags={tagsInput.split(',').map(t => t.trim()).filter(Boolean)}
+            slug={editSlug}
+            mode={editSlug ? 'edit' : 'create'}
+          />
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
 
