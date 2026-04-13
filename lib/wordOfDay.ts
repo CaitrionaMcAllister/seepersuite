@@ -113,9 +113,11 @@ export const WORDS: Word[] = [
  * All users on the same day see the same word. Updates at midnight.
  */
 export function getWordOfDay(): Word {
-  const now = new Date()
-  // Days since a fixed epoch (2024-01-01)
-  const epoch = new Date('2024-01-01T00:00:00Z')
-  const dayIndex = Math.floor((now.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24))
+  // Days since 2024-01-01 in UK local time (handles BST/GMT automatically)
+  const ukDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' })
+  const [y, m, d] = ukDateStr.split('-').map(Number)
+  const today = new Date(y, m - 1, d)
+  const epoch = new Date(2024, 0, 1)
+  const dayIndex = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24))
   return WORDS[((dayIndex % WORDS.length) + WORDS.length) % WORDS.length]
 }
