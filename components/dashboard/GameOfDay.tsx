@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { getGameOfDay, GAME_META } from '@/lib/gameOfDay'
 import SeeWord from '@/components/games/SeeWord'
 import SeeQuiz from '@/components/games/SeeQuiz'
