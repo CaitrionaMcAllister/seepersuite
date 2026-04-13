@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { cn } from '@/lib/utils'
 import { gameStorageKey } from '@/lib/gameOfDay'
+import { submitGameScore } from '@/lib/gameScores'
 
 const WORDS = [
   'PIXEL', 'FRAME', 'AUDIO', 'SYNTH', 'DEPTH',
@@ -85,6 +86,7 @@ export default function SeeWord({ dayIndex }: { dayIndex: number }) {
     setGameOver(over)
     setWon(didWin)
     localStorage.setItem(storageKey, JSON.stringify({ guesses: newGuesses, gameOver: over, won: didWin }))
+    if (over) submitGameScore('seeWord', dayIndex, didWin ? 7 - newGuesses.length : 0)
     if (didWin) showToast('Brilliant! 🎉')
     else if (newGuesses.length >= 6) showToast(`The word was ${answer}`)
   }, [current, guesses, answer, storageKey])

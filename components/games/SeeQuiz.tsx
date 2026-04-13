@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { gameStorageKey } from '@/lib/gameOfDay'
+import { submitGameScore } from '@/lib/gameScores'
 
 interface Question {
   q: string
@@ -121,7 +122,11 @@ export default function SeeQuiz({ dayIndex }: { dayIndex: number }) {
     const isLast = currentQ === 4
     const isDone = isLast
     if (!isLast) setTimeout(() => setCurrentQ(q => q + 1), 700)
-    else setDone(true)
+    else {
+      setDone(true)
+      const finalScore = [...answers].filter((a, i) => newSub[i] && a === questions[i].answer).length
+      submitGameScore('seeQuiz', dayIndex, finalScore)
+    }
     saveState(answers, newSub, currentQ, isDone)
   }
 

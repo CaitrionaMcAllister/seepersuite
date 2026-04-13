@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { gameStorageKey } from '@/lib/gameOfDay'
+import { submitGameScore } from '@/lib/gameScores'
 
 interface ScopePuzzle {
   answer: string
@@ -232,6 +233,7 @@ export default function SeeScope({ dayIndex }: { dayIndex: number }) {
     if (!correct && !isDone) {
       setTimeout(() => { setChosen(null); setSubmitted(false); setRevealed(newRevealed); saveState(newRevealed, null, false, false, false) }, 1200)
     } else {
+      if (isDone) submitGameScore('seeScope', dayIndex, correct ? 7 - revealed : 0)
       saveState(newRevealed, chosen, true, correct, isDone)
     }
   }

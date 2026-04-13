@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { gameStorageKey } from '@/lib/gameOfDay'
+import { submitGameScore } from '@/lib/gameScores'
 
 interface Category { label: string; words: string[]; color: string; bg: string }
 interface Puzzle { categories: Category[] }
@@ -151,6 +152,7 @@ export default function SeeLinks({ dayIndex }: { dayIndex: number }) {
       setSolved(newSolved)
       setSelected([])
       setDone(isDone)
+      if (isDone) submitGameScore('seeLinks', dayIndex, newSolved.length)
       if (newSolved.length === 4) showToast('All found! 🎉')
       else showToast('Correct! Keep going.')
       saveState([], newSolved, attempts, isDone)
@@ -166,7 +168,7 @@ export default function SeeLinks({ dayIndex }: { dayIndex: number }) {
       setTimeout(() => setShake(false), 400)
       if (oneAway) showToast('One away…')
       else showToast('Not quite.')
-      if (newAtt === 0) { setDone(true); saveState(selected, solved, 0, true) }
+      if (newAtt === 0) { setDone(true); submitGameScore('seeLinks', dayIndex, solved.length); saveState(selected, solved, 0, true) }
       else saveState(selected, solved, newAtt, false)
     }
   }
