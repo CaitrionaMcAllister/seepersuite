@@ -17,6 +17,9 @@ export function FAB({ authorName = '' }: { authorName?: string }) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
 
+  // Hide entirely on all /wiki routes — wiki has its own "+ New page" flow
+  if (pathname?.startsWith('/wiki')) return null
+
   // Match on first path segment so sub-pages like /wiki/slug still resolve
   const segment = '/' + (pathname?.split('/')[1] ?? '')
   const detectedSection = PATH_TO_SECTION[segment] ?? null
