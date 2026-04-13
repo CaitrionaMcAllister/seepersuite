@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { gameStorageKey } from '@/lib/gameOfDay'
 
 const PROMPTS = [
@@ -36,12 +36,19 @@ const PROMPTS = [
   { prompt: 'What technology, if it existed, would make art impossible?', hint: 'Think about what tension art requires to exist.' },
 ]
 
+const TRANSITION_INTERVAL = 4000 // ms per response when cycling
+
 export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
   const { prompt, hint } = PROMPTS[dayIndex % PROMPTS.length]
   const storageKey = gameStorageKey('seeSpark')
 
   const [response, setResponse] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [others, setOthers] = useState<string[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [fadingIn, setFadingIn] = useState(true)
+  const [loadingOthers, setLoadingOthers] = useState(false)
+  const cycleTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     try {
@@ -49,16 +56,59 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       if (saved) {
         const s = JSON.parse(saved)
         setResponse(s.response ?? '')
-        setSubmitted(s.submitted ?? false)
+        if (s.submitted) {
+          setSubmitted(true)
+          fetchOthers(dayIndex % PROMPTS.length)
+        }
       }
     } catch {}
-  }, [storageKey])
+  }, [storageKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function submit() {
+  async function fetchOthers(promptIndex: number) {
+    setLoadingOthers(true)
+    try {
+      const res = await fetch(`/api/seespark?prompt_index=${promptIndex}`)
+      if (res.ok) {
+        const data: { response: string }[] = await res.json()
+        setOthers(data.map(d => d.response))
+      }
+    } catch {}
+    setLoadingOthers(false)
+  }
+
+  async function submit() {
     if (!response.trim()) return
     setSubmitted(true)
     localStorage.setItem(storageKey, JSON.stringify({ response, submitted: true }))
+
+    const promptIndex = dayIndex % PROMPTS.length
+    try {
+      await fetch('/api/seespark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt_index: promptIndex, response }),
+      })
+    } catch {}
+
+    fetchOthers(promptIndex)
   }
+
+  // Cycle through others with a fade transition when there are many
+  useEffect(() => {
+    if (others.length <= 1) return
+    cycleTimer.current = setInterval(() => {
+      setFadingIn(false)
+      setTimeout(() => {
+        setActiveIndex(i => (i + 1) % others.length)
+        setFadingIn(true)
+      }, 300)
+    }, TRANSITION_INTERVAL)
+    return () => {
+      if (cycleTimer.current) clearInterval(cycleTimer.current)
+    }
+  }, [others])
+
+  const activeOther = others[activeIndex]
 
   return (
     <div className="max-w-lg mx-auto space-y-5">
@@ -72,12 +122,64 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       </div>
 
       {submitted ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* User's own response */}
           <div className="rounded-xl p-4 bg-seeper-raised border border-seeper-border/40">
             <p className="text-xs text-seeper-muted mb-1">Your response</p>
             <p className="text-seeper-white text-sm font-display leading-relaxed whitespace-pre-wrap">{response}</p>
           </div>
-          <p className="text-center text-xs text-seeper-muted">Submitted ✓ — come back tomorrow for a new spark.</p>
+
+          {/* Others' responses */}
+          {loadingOthers ? (
+            <p className="text-center text-xs text-seeper-muted animate-pulse">Loading responses…</p>
+          ) : others.length > 0 ? (
+            <div className="space-y-2">
+              <p className="text-xs text-seeper-muted text-center">
+                {others.length} {others.length === 1 ? 'response' : 'responses'} from the team
+              </p>
+
+              {/* Single card that cycles when many */}
+              <div
+                className="rounded-xl p-4 border border-seeper-border/30"
+                style={{
+                  background: 'color-mix(in srgb, var(--color-plasma) 5%, var(--color-raised))',
+                  minHeight: 72,
+                  transition: 'opacity 0.3s ease',
+                  opacity: fadingIn ? 1 : 0,
+                }}
+              >
+                <p className="text-seeper-white text-sm font-display leading-relaxed whitespace-pre-wrap">
+                  {activeOther}
+                </p>
+              </div>
+
+              {/* Dot indicators when cycling */}
+              {others.length > 1 && (
+                <div className="flex justify-center gap-1.5 pt-1">
+                  {others.slice(0, Math.min(others.length, 8)).map((_, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: '50%',
+                        display: 'inline-block',
+                        background: i === activeIndex % Math.min(others.length, 8)
+                          ? 'var(--color-plasma)'
+                          : 'var(--seeper-border)',
+                        transition: 'background 0.3s ease',
+                      }}
+                    />
+                  ))}
+                  {others.length > 8 && (
+                    <span style={{ fontSize: 10, color: 'var(--seeper-muted)', lineHeight: '5px' }}>+{others.length - 8}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-center text-xs text-seeper-muted">You&apos;re the first — check back later to see others&apos; responses.</p>
+          )}
         </div>
       ) : (
         <>
