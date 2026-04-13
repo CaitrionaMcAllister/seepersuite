@@ -25,14 +25,14 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const rows = (data ?? []).map((row: {
-    score: number
-    user_id: string
-    profiles: { display_name: string | null; full_name: string | null } | null
-  }) => ({
-    score: row.score,
-    name: row.profiles?.display_name ?? row.profiles?.full_name ?? 'Team member',
-  }))
+  // Supabase returns joined rows as arrays; normalise to single object
+  const rows = (data ?? []).map((row) => {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+    return {
+      score: row.score as number,
+      name: (profile?.display_name ?? profile?.full_name ?? 'Team member') as string,
+    }
+  })
 
   return NextResponse.json(rows)
 }
