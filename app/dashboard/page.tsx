@@ -108,7 +108,7 @@ export default async function DashboardPage() {
         <QuickLinks />
 
         {/* Word of the day + Game of the day */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
           <WordOfDay />
           <GameOfDay />
         </div>
