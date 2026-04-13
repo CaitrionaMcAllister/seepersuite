@@ -38,6 +38,17 @@ const PROMPTS = [
 
 const TRANSITION_INTERVAL = 4000 // ms per response when cycling
 
+const PLACEHOLDER_RESPONSES = [
+  'The moment you walk in and immediately forget why you came.',
+  'Something between static and breathing — like the room is deciding whether to trust you.',
+  'Velvet static. A hum that only stops when you stop moving.',
+  'The colour of a conversation you meant to have three years ago.',
+  'It already started before you arrived. You just don\'t know what you missed.',
+  'Slow enough that you\'re not sure if it\'s moving, or you are.',
+  'The feeling just before you recognise a smell.',
+  'Like gravity shifted two degrees and no one mentioned it.',
+]
+
 export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
   const { prompt, hint } = PROMPTS[dayIndex % PROMPTS.length]
   const storageKey = gameStorageKey('seeSpark')
@@ -47,8 +58,13 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
   const [others, setOthers] = useState<string[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [fadingIn, setFadingIn] = useState(true)
-  const [loadingOthers, setLoadingOthers] = useState(false)
   const cycleTimer = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  function seedPlaceholders() {
+    // Shuffle placeholders so they appear in a different order each session
+    const shuffled = [...PLACEHOLDER_RESPONSES].sort(() => Math.random() - 0.5)
+    setOthers(shuffled)
+  }
 
   useEffect(() => {
     try {
@@ -58,6 +74,7 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
         setResponse(s.response ?? '')
         if (s.submitted) {
           setSubmitted(true)
+          seedPlaceholders()
           fetchOthers(dayIndex % PROMPTS.length)
         }
       }
@@ -65,21 +82,24 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
   }, [storageKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchOthers(promptIndex: number) {
-    setLoadingOthers(true)
     try {
       const res = await fetch(`/api/seespark?prompt_index=${promptIndex}`)
       if (res.ok) {
         const data: { response: string }[] = await res.json()
-        setOthers(data.map(d => d.response))
+        // Only replace placeholders if real responses exist
+        if (data.length > 0) {
+          setOthers(data.map(d => d.response))
+          setActiveIndex(0)
+        }
       }
     } catch {}
-    setLoadingOthers(false)
   }
 
   async function submit() {
     if (!response.trim()) return
     setSubmitted(true)
     localStorage.setItem(storageKey, JSON.stringify({ response, submitted: true }))
+    seedPlaceholders()
 
     const promptIndex = dayIndex % PROMPTS.length
     try {
@@ -130,15 +150,9 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
           </div>
 
           {/* Others' responses */}
-          {loadingOthers ? (
-            <p className="text-center text-xs text-seeper-muted animate-pulse">Loading responses…</p>
-          ) : others.length > 0 ? (
+          {others.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-seeper-muted text-center">
-                {others.length} {others.length === 1 ? 'response' : 'responses'} from the team
-              </p>
-
-              {/* Single card that cycles when many */}
+              {/* Single card that cycles */}
               <div
                 className="rounded-xl p-4 border border-seeper-border/30"
                 style={{
@@ -153,32 +167,28 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
                 </p>
               </div>
 
-              {/* Dot indicators when cycling */}
-              {others.length > 1 && (
-                <div className="flex justify-center gap-1.5 pt-1">
-                  {others.slice(0, Math.min(others.length, 8)).map((_, i) => (
-                    <span
-                      key={i}
-                      style={{
-                        width: 5,
-                        height: 5,
-                        borderRadius: '50%',
-                        display: 'inline-block',
-                        background: i === activeIndex % Math.min(others.length, 8)
-                          ? 'var(--color-plasma)'
-                          : 'var(--seeper-border)',
-                        transition: 'background 0.3s ease',
-                      }}
-                    />
-                  ))}
-                  {others.length > 8 && (
-                    <span style={{ fontSize: 10, color: 'var(--seeper-muted)', lineHeight: '5px' }}>+{others.length - 8}</span>
-                  )}
-                </div>
-              )}
+              {/* Dot indicators */}
+              <div className="flex justify-center gap-1.5 pt-1">
+                {others.slice(0, Math.min(others.length, 8)).map((_, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: '50%',
+                      display: 'inline-block',
+                      background: i === activeIndex % Math.min(others.length, 8)
+                        ? 'var(--color-plasma)'
+                        : 'var(--seeper-border)',
+                      transition: 'background 0.3s ease',
+                    }}
+                  />
+                ))}
+                {others.length > 8 && (
+                  <span style={{ fontSize: 10, color: 'var(--seeper-muted)', lineHeight: '5px' }}>+{others.length - 8}</span>
+                )}
+              </div>
             </div>
-          ) : (
-            <p className="text-center text-xs text-seeper-muted">You&apos;re the first — check back later to see others&apos; responses.</p>
           )}
         </div>
       ) : (
