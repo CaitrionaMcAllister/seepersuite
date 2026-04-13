@@ -45,13 +45,29 @@ export default function GameOfDay() {
               </h2>
             </div>
           </div>
-          {!playing && (
+          {!playing ? (
             <button
               onClick={() => setPlaying(true)}
               className="px-5 py-2 rounded-full text-sm font-bold font-display transition-all hover:opacity-90 active:scale-95 flex-shrink-0"
               style={{ background: meta.color, color: '#111111' }}
             >
               Play
+            </button>
+          ) : (
+            <button
+              onClick={() => setPlaying(false)}
+              className="flex-shrink-0 transition-all hover:opacity-80 active:scale-95"
+              style={{
+                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'none',
+                color: 'var(--color-subtext)',
+                fontSize: 11,
+                padding: '5px 12px',
+                borderRadius: 20,
+                cursor: 'pointer',
+              }}
+            >
+              ← back
             </button>
           )}
         </div>

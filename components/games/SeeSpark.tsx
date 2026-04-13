@@ -60,10 +60,13 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
   const [fadingIn, setFadingIn] = useState(true)
   const cycleTimer = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  function seedPlaceholders() {
-    // Shuffle placeholders so they appear in a different order each session
-    const shuffled = [...PLACEHOLDER_RESPONSES].sort(() => Math.random() - 0.5)
-    setOthers(shuffled)
+  function buildPool(userResponse: string, dbResponses: string[]) {
+    // Mix user's response into the pool at a random position among the others
+    const base = dbResponses.length > 0 ? dbResponses : [...PLACEHOLDER_RESPONSES].sort(() => Math.random() - 0.5)
+    const pool = [...base]
+    const insertAt = Math.floor(Math.random() * (pool.length + 1))
+    pool.splice(insertAt, 0, userResponse)
+    return pool
   }
 
   useEffect(() => {
@@ -72,23 +75,22 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       if (saved) {
         const s = JSON.parse(saved)
         setResponse(s.response ?? '')
-        if (s.submitted) {
+        if (s.submitted && s.response) {
           setSubmitted(true)
-          seedPlaceholders()
-          fetchOthers(dayIndex % PROMPTS.length)
+          setOthers(buildPool(s.response, []))
+          fetchOthers(dayIndex % PROMPTS.length, s.response)
         }
       }
     } catch {}
   }, [storageKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function fetchOthers(promptIndex: number) {
+  async function fetchOthers(promptIndex: number, userResponse: string) {
     try {
       const res = await fetch(`/api/seespark?prompt_index=${promptIndex}`)
       if (res.ok) {
         const data: { response: string }[] = await res.json()
-        // Only replace placeholders if real responses exist
         if (data.length > 0) {
-          setOthers(data.map(d => d.response))
+          setOthers(buildPool(userResponse, data.map(d => d.response)))
           setActiveIndex(0)
         }
       }
@@ -99,7 +101,7 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
     if (!response.trim()) return
     setSubmitted(true)
     localStorage.setItem(storageKey, JSON.stringify({ response, submitted: true }))
-    seedPlaceholders()
+    setOthers(buildPool(response, []))
 
     const promptIndex = dayIndex % PROMPTS.length
     try {
@@ -110,10 +112,10 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       })
     } catch {}
 
-    fetchOthers(promptIndex)
+    fetchOthers(promptIndex, response)
   }
 
-  // Cycle through others with a fade transition when there are many
+  // Cycle with slide+fade transition
   useEffect(() => {
     if (others.length <= 1) return
     cycleTimer.current = setInterval(() => {
@@ -121,7 +123,7 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       setTimeout(() => {
         setActiveIndex(i => (i + 1) % others.length)
         setFadingIn(true)
-      }, 300)
+      }, 350)
     }, TRANSITION_INTERVAL)
     return () => {
       if (cycleTimer.current) clearInterval(cycleTimer.current)
@@ -142,24 +144,18 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
       </div>
 
       {submitted ? (
-        <div className="space-y-4">
-          {/* User's own response */}
-          <div className="rounded-xl p-4 bg-seeper-raised border border-seeper-border/40">
-            <p className="text-xs text-seeper-muted mb-1">Your response</p>
-            <p className="text-seeper-white text-sm font-display leading-relaxed whitespace-pre-wrap">{response}</p>
-          </div>
-
-          {/* Others' responses */}
+        <div className="space-y-3">
+          {/* Cycling response pool — includes user's own */}
           {others.length > 0 && (
-            <div className="space-y-2">
-              {/* Single card that cycles */}
+            <div className="space-y-2" style={{ overflow: 'hidden' }}>
               <div
                 className="rounded-xl p-4 border border-seeper-border/30"
                 style={{
                   background: 'color-mix(in srgb, var(--color-plasma) 5%, var(--color-raised))',
-                  minHeight: 72,
-                  transition: 'opacity 0.3s ease',
+                  minHeight: 80,
                   opacity: fadingIn ? 1 : 0,
+                  transform: fadingIn ? 'translateY(0)' : 'translateY(-6px)',
+                  transition: 'opacity 0.35s ease, transform 0.35s ease',
                 }}
               >
                 <p className="text-seeper-white text-sm font-display leading-relaxed whitespace-pre-wrap">
@@ -168,7 +164,7 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
               </div>
 
               {/* Dot indicators */}
-              <div className="flex justify-center gap-1.5 pt-1">
+              <div className="flex justify-center gap-1.5 pt-0.5">
                 {others.slice(0, Math.min(others.length, 8)).map((_, i) => (
                   <span
                     key={i}
@@ -179,8 +175,8 @@ export default function SeeSpark({ dayIndex }: { dayIndex: number }) {
                       display: 'inline-block',
                       background: i === activeIndex % Math.min(others.length, 8)
                         ? 'var(--color-plasma)'
-                        : 'var(--seeper-border)',
-                      transition: 'background 0.3s ease',
+                        : 'rgba(255,255,255,0.12)',
+                      transition: 'background 0.35s ease',
                     }}
                   />
                 ))}
