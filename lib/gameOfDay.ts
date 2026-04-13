@@ -2,11 +2,11 @@ export const GAMES = ['seeWord', 'seeQuiz', 'seeLinks', 'seeSpark', 'seeScope'] 
 export type GameType = typeof GAMES[number]
 
 export const GAME_META: Record<GameType, { label: string; tagline: string; color: string }> = {
-  seeWord:  { label: 'seeWord',  tagline: 'Guess the 5-letter word — studio edition', color: 'var(--color-fern)' },
-  seeQuiz:  { label: 'seeQuiz',  tagline: '5 questions on immersive tech & creative culture', color: 'var(--color-quantum)' },
-  seeLinks: { label: 'seeLinks', tagline: 'Group 16 words into 4 hidden categories', color: 'var(--color-volt)' },
-  seeSpark: { label: 'seeSpark', tagline: 'One creative prompt. No wrong answers.', color: 'var(--color-plasma)' },
-  seeScope: { label: 'seeScope', tagline: 'Identify the installation from six clues', color: 'var(--color-circuit)' },
+  seeWord:  { label: 'Spellbound',  tagline: 'Guess the 5-letter word — studio edition', color: 'var(--color-fern)' },
+  seeQuiz:  { label: 'Think Fast',  tagline: '5 questions on immersive tech & creative culture', color: 'var(--color-quantum)' },
+  seeLinks: { label: 'Gridlock',    tagline: 'Group 16 words into 4 hidden categories', color: 'var(--color-volt)' },
+  seeSpark: { label: 'ImPROMPTu',   tagline: 'One creative prompt. No wrong answers.', color: 'var(--color-plasma)' },
+  seeScope: { label: 'Puzzled',     tagline: 'Watch the image reveal — guess before time runs out', color: 'var(--color-circuit)' },
 }
 
 /**
