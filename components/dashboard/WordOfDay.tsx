@@ -1,10 +1,23 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { getWordOfDay } from '@/lib/wordOfDay'
 
 export default function WordOfDay() {
-  const word = getWordOfDay()
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
+  // Render a neutral skeleton during SSR / hydration to avoid mismatch
+  if (!mounted) {
+    return (
+      <div
+        className="seeper-card relative overflow-hidden"
+        style={{ background: 'linear-gradient(135deg, color-mix(in srgb, var(--color-quantum) 8%, transparent), transparent 60%)', minHeight: 120 }}
+      />
+    )
+  }
+
+  const word = getWordOfDay()
   const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   })

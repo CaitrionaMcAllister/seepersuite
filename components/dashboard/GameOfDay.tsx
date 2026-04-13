@@ -12,11 +12,20 @@ import { Leaderboard } from './Leaderboard'
 const SCORED_GAMES = new Set(['seeWord', 'seeQuiz', 'seeLinks', 'seeScope'])
 
 export default function GameOfDay() {
-  const { game, dayIndex } = getGameOfDay()
-  const meta = GAME_META[game]
+  const [mounted, setMounted] = useState(false)
   const [playing, setPlaying] = useState(false)
   const [showLeaderboard, setShowLeaderboard] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
 
+  // Neutral skeleton during SSR / hydration to avoid date mismatch
+  if (!mounted) {
+    return (
+      <div className="seeper-card relative overflow-hidden" style={{ minHeight: 120 }} />
+    )
+  }
+
+  const { game, dayIndex } = getGameOfDay()
+  const meta = GAME_META[game]
   const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'short', day: 'numeric', month: 'short',
   })
