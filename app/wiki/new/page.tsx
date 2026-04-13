@@ -13,7 +13,7 @@ export default async function WikiNewPage() {
 
   return (
     <AppShell profile={profile as Profile | null}>
-      <WikiEditorPage userId={user.id} />
+      <WikiEditorPage profile={profile as Profile | null} mode="create" />
     </AppShell>
   )
 }

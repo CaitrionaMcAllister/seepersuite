@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { MOCK_WIKI_PAGES } from '@/lib/constants'
-import { WikiCard } from '@/components/wiki/WikiCard'
+import { WikiBrowseRow } from '@/components/wiki/WikiBrowseRow'
 import { WikiSearch } from '@/components/wiki/WikiSearch'
-import { cn } from '@/lib/utils'
 
 const CATEGORIES = ['All', 'Creative', 'Production', 'Tech', 'Business', 'AI', 'General']
 
@@ -19,46 +19,54 @@ interface Contribution {
   submitted_at: string
 }
 
-function nameInitials(name: string): string {
-  return name.split(' ').map(w => w[0] ?? '').join('').slice(0, 2).toUpperCase()
-}
-
-function toWikiPage(c: Contribution) {
+function toRow(c: Contribution) {
   return {
     slug: `contribution-${c.id}`,
     title: c.title,
     category: c.category,
     author: c.submitter_name,
-    authorInitials: nameInitials(c.submitter_name),
-    excerpt: c.description,
-    views: 0,
+    authorColor: null,
     updatedAt: c.submitted_at,
+    views: 0,
     tags: c.tags ?? [],
   }
 }
 
 export function WikiPageClient({ contributions = [] }: { contributions?: Contribution[] }) {
+  const router = useRouter()
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch] = useState('')
 
-  const allPages = useMemo(() => {
-    const fromContributions = contributions.map(toWikiPage)
-    // Merge: contributions first (most recent), then mock pages
-    return [...fromContributions, ...MOCK_WIKI_PAGES]
+  const allRows = useMemo(() => {
+    const fromContributions = contributions.map(toRow)
+    const fromMock = MOCK_WIKI_PAGES.map(p => ({
+      slug: p.slug,
+      title: p.title,
+      category: p.category,
+      author: p.author,
+      authorColor: null,
+      updatedAt: p.updatedAt,
+      views: p.views,
+      tags: p.tags ?? [],
+    }))
+    return [...fromContributions, ...fromMock]
   }, [contributions])
 
   const filtered = useMemo(() => {
-    return allPages.filter(page => {
-      const matchesCat = activeCategory === 'All' || page.category.toLowerCase() === activeCategory.toLowerCase()
+    return allRows.filter(row => {
+      const matchesCat = activeCategory === 'All' ||
+        row.category.toLowerCase() === activeCategory.toLowerCase()
       const q = search.toLowerCase()
-      const matchesSearch = !q || page.title.toLowerCase().includes(q) || page.excerpt.toLowerCase().includes(q)
+      const matchesSearch = !q ||
+        row.title.toLowerCase().includes(q) ||
+        row.tags.some(t => t.toLowerCase().includes(q))
       return matchesCat && matchesSearch
     })
-  }, [allPages, activeCategory, search])
+  }, [allRows, activeCategory, search])
 
   const recentlyUpdated = useMemo(
-    () => [...allPages].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 5),
-    [allPages]
+    () => [...allRows].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 5),
+    [allRows]
   )
 
   const mostViewed = useMemo(
@@ -69,9 +77,36 @@ export function WikiPageClient({ contributions = [] }: { contributions?: Contrib
   return (
     <div className="page-enter">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-black" style={{ color: 'var(--color-wiki)' }}>seeWiki</h1>
-        <p className="text-xs text-[var(--color-muted)] mt-1">{allPages.length} pages</p>
+      <div className="flex items-end justify-between mb-5">
+        <div>
+          <h1 className="font-display font-black" style={{ color: '#B0A9CF', fontSize: 22 }}>seeWiki</h1>
+          <p className="mt-0.5" style={{ fontSize: 11, color: 'var(--seeper-muted)' }}>{allRows.length} pages</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.push('/wiki/new')}
+          className="transition-all duration-150"
+          style={{
+            border: '1px solid var(--seeper-border)',
+            background: 'none',
+            color: 'var(--color-subtext)',
+            fontSize: 11,
+            fontWeight: 600,
+            padding: '5px 14px',
+            borderRadius: 20,
+            cursor: 'pointer',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.borderColor = '#B0A9CF'
+            e.currentTarget.style.color = '#B0A9CF'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.borderColor = 'var(--seeper-border)'
+            e.currentTarget.style.color = 'var(--color-subtext)'
+          }}
+        >
+          + New page
+        </button>
       </div>
 
       {/* Search */}
@@ -79,18 +114,24 @@ export function WikiPageClient({ contributions = [] }: { contributions?: Contrib
         <WikiSearch value={search} onChange={setSearch} />
       </div>
 
-      {/* Category tabs */}
-      <div className="flex gap-1.5 mb-6 overflow-x-auto">
+      {/* Category filter pills */}
+      <div className="flex gap-1.5 mb-6 overflow-x-auto pb-1">
         {CATEGORIES.map(cat => (
           <button
             key={cat}
+            type="button"
             onClick={() => setActiveCategory(cat)}
-            className={cn(
-              'px-3 py-1.5 rounded-full text-xs whitespace-nowrap border transition-all duration-150',
-              activeCategory === cat
-                ? 'border-quantum bg-quantum/10 text-quantum'
-                : 'border-seeper-border/40 text-[var(--color-subtext)] hover:border-seeper-border'
-            )}
+            className="whitespace-nowrap transition-all duration-150"
+            style={{
+              fontSize: 10,
+              fontWeight: activeCategory === cat ? 700 : 600,
+              padding: '4px 12px',
+              borderRadius: 20,
+              border: activeCategory === cat ? '1px solid #B0A9CF' : '1px solid var(--seeper-border)',
+              background: activeCategory === cat ? 'rgba(176,169,207,0.15)' : 'none',
+              color: activeCategory === cat ? '#B0A9CF' : 'var(--color-subtext)',
+              cursor: 'pointer',
+            }}
           >
             {cat}
           </button>
@@ -103,34 +144,95 @@ export function WikiPageClient({ contributions = [] }: { contributions?: Contrib
         <div className="flex-1 min-w-0">
           {filtered.length === 0 ? (
             <div className="py-16 text-center">
-              <p className="text-[var(--color-muted)] text-sm">No pages found</p>
+              <p style={{ color: 'var(--seeper-muted)', fontSize: 13 }}>No pages found</p>
+              <button
+                type="button"
+                onClick={() => { setSearch(''); setActiveCategory('All') }}
+                className="mt-3 text-xs underline"
+                style={{ color: '#B0A9CF', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                Clear filters
+              </button>
             </div>
           ) : (
-            <div className="divide-y divide-seeper-border/20">
-              {filtered.map(page => (
-                <WikiCard key={page.slug} {...page} />
+            <div>
+              {filtered.map(row => (
+                <WikiBrowseRow key={row.slug} {...row} />
               ))}
             </div>
           )}
         </div>
 
         {/* Sidebar */}
-        <div className="w-56 flex-shrink-0 space-y-6">
-          <div>
-            <h4 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Most viewed</h4>
-            <div className="space-y-2">
+        <div className="w-56 flex-shrink-0 space-y-3">
+          {/* Most viewed card */}
+          <div
+            style={{
+              background: 'var(--seeper-surface)',
+              border: '1px solid var(--seeper-border)',
+              borderTop: '2px solid #B0A9CF',
+              borderRadius: 12,
+              padding: 14,
+            }}
+          >
+            <p
+              className="uppercase tracking-wider font-bold mb-2.5"
+              style={{ fontSize: 9, letterSpacing: '1.5px', color: 'var(--seeper-muted)' }}
+            >
+              Most viewed
+            </p>
+            <div>
               {mostViewed.map(p => (
-                <Link key={p.slug} href={`/wiki/${p.slug}`} className="block text-xs py-1.5 hover:text-quantum transition-colors truncate">
+                <Link
+                  key={p.slug}
+                  href={`/wiki/${p.slug}`}
+                  className="block transition-colors duration-150"
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--color-subtext)',
+                    padding: '4px 0',
+                    borderBottom: '1px solid var(--seeper-raised)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#B0A9CF')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-subtext)')}
+                >
                   {p.title}
                 </Link>
               ))}
             </div>
           </div>
-          <div>
-            <h4 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">Recently updated</h4>
-            <div className="space-y-2">
+
+          {/* Recently updated card */}
+          <div
+            style={{
+              background: 'var(--seeper-surface)',
+              border: '1px solid var(--seeper-border)',
+              borderTop: '2px solid #B0A9CF',
+              borderRadius: 12,
+              padding: 14,
+            }}
+          >
+            <p
+              className="uppercase tracking-wider font-bold mb-2.5"
+              style={{ fontSize: 9, letterSpacing: '1.5px', color: 'var(--seeper-muted)' }}
+            >
+              Recently updated
+            </p>
+            <div>
               {recentlyUpdated.map(p => (
-                <Link key={p.slug} href={`/wiki/${p.slug}`} className="block text-xs py-1.5 hover:text-quantum transition-colors truncate">
+                <Link
+                  key={p.slug}
+                  href={`/wiki/${p.slug}`}
+                  className="block transition-colors duration-150"
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--color-subtext)',
+                    padding: '4px 0',
+                    borderBottom: '1px solid var(--seeper-raised)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = '#B0A9CF')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--color-subtext)')}
+                >
                   {p.title}
                 </Link>
               ))}

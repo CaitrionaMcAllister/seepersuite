@@ -33,17 +33,35 @@ export interface WikiPage {
   id: string
   slug: string
   title: string
-  content: string | null
+  content: string | null           // TipTap HTML output
+  content_json: object | null      // TipTap JSON for editing
   excerpt: string | null
   category: WikiCategory | null
   tags: string[] | null
   author_id: string | null
+  author?: Profile
   last_edited_by: string | null
   views: number
+  upvotes: number
   published: boolean
+  table_of_contents: TocItem[] | null
   created_at: string
   updated_at: string
-  author?: Profile
+}
+
+export interface TocItem {
+  id: string
+  level: 1 | 2 | 3
+  text: string
+  anchor: string
+}
+
+export interface SlashCommandItem {
+  icon: string
+  label: string
+  description: string
+  type: string
+  disabled?: boolean
 }
 
 export interface Prompt {
