@@ -32,7 +32,6 @@ export function WikiEditor({
   initialCategory = null,
   initialTags = [],
   slug,
-  mode,
 }: WikiEditorProps) {
   const router = useRouter()
   const [title, setTitle] = useState(initialTitle)
