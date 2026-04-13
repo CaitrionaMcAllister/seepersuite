@@ -13,13 +13,12 @@ export const GAME_META: Record<GameType, { label: string; tagline: string; color
  * Returns today's game type and the day index (for picking today's puzzle within each game).
  * Rotates deterministically — same game for all users on the same day, updates at midnight.
  */
-/** Days since 2024-01-01 in UK local time (Europe/London — handles BST/GMT) */
+/** Days since 2024-01-01, keyed to UK date but computed in pure UTC to avoid DST skew */
 function getUKDayIndex(): number {
   const ukDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' }) // YYYY-MM-DD
   const [y, m, d] = ukDateStr.split('-').map(Number)
-  const today = new Date(y, m - 1, d)
-  const epoch = new Date(2024, 0, 1)
-  return Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24))
+  // Use Date.UTC so both timestamps are at 00:00 UTC — DST never affects the difference
+  return Math.floor((Date.UTC(y, m - 1, d) - Date.UTC(2024, 0, 1)) / 86_400_000)
 }
 
 export function getGameOfDay(): { game: GameType; dayIndex: number } {
