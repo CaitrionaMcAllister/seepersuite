@@ -25,12 +25,25 @@ function getEasterSunday(year: number): Date {
   return new Date(year, month, day)
 }
 
-/** Return a UK-aware greeting for the given name, checking holidays first */
-export function getGreeting(name: string, date: Date = new Date()): string {
+/** Return a UK-aware greeting for the given name, checking birthday and holidays first */
+export function getGreeting(name: string, date: Date = new Date(), birthday?: string | null): string {
   const month = date.getMonth()   // 0-indexed
   const day   = date.getDate()
   const hour  = date.getHours()
   const year  = date.getFullYear()
+
+  // Birthday takes priority over everything else
+  if (birthday) {
+    const [bdMM, bdDD] = birthday.split('-').map(Number)
+    if (!isNaN(bdMM) && !isNaN(bdDD) && month === bdMM - 1 && day === bdDD) {
+      const greetings = [
+        `Happy birthday, ${name}! 🎂`,
+        `It's your birthday, ${name}! Hope it's a good one 🎉`,
+        `Happy birthday, ${name} 🎈`,
+      ]
+      return greetings[day % greetings.length]
+    }
+  }
 
   const easter       = getEasterSunday(year)
   const easterMonth  = easter.getMonth()

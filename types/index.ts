@@ -19,6 +19,7 @@ export interface Profile {
   linkedin_url?: string
   avatar_color?: string
   notifications_prefs?: Partial<Record<NotificationPrefKey, boolean>>
+  birthday?: string | null  // MM-DD, e.g. "04-14"
 }
 
 export type Department = 'creative' | 'production' | 'tech' | 'business' | 'operations' | 'finance'

@@ -19,7 +19,7 @@ export default function Header({ profile }: HeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false)
 
   // Compute once per render — these read the client's local clock
-  const greeting = useMemo(() => getGreeting(name), [name])
+  const greeting = useMemo(() => getGreeting(name, new Date(), profile?.birthday), [name, profile?.birthday])
   const dateString = useMemo(() => formatDate(new Date()), [])
 
   useEffect(() => {
