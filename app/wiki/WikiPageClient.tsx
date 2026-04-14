@@ -28,7 +28,7 @@ interface WikiPage {
   author_id: string | null
   views: number
   updated_at: string
-  profiles: { full_name: string | null; display_name: string | null; avatar_color: string | null } | null
+  profiles: { full_name: string | null; display_name: string | null; avatar_color: string | null } | { full_name: string | null; display_name: string | null; avatar_color: string | null }[] | null
 }
 
 function toRow(c: Contribution) {
