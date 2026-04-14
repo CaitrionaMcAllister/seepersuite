@@ -19,6 +19,18 @@ interface Contribution {
   submitted_at: string
 }
 
+interface WikiPage {
+  id: string
+  slug: string
+  title: string
+  category: string | null
+  tags: string[]
+  author_id: string | null
+  views: number
+  updated_at: string
+  profiles: { full_name: string | null; display_name: string | null; avatar_color: string | null } | null
+}
+
 function toRow(c: Contribution) {
   return {
     slug: `contribution-${c.id}`,
@@ -32,12 +44,27 @@ function toRow(c: Contribution) {
   }
 }
 
-export function WikiPageClient({ contributions = [] }: { contributions?: Contribution[] }) {
+function wikiPageToRow(p: WikiPage) {
+  const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+  return {
+    slug: p.slug,
+    title: p.title,
+    category: p.category ?? 'general',
+    author: profile?.display_name ?? profile?.full_name ?? 'Seeper',
+    authorColor: profile?.avatar_color ?? null,
+    updatedAt: p.updated_at,
+    views: p.views ?? 0,
+    tags: p.tags ?? [],
+  }
+}
+
+export function WikiPageClient({ contributions = [], wikiPages = [] }: { contributions?: Contribution[]; wikiPages?: WikiPage[] }) {
   const router = useRouter()
   const [activeCategory, setActiveCategory] = useState('All')
   const [search, setSearch] = useState('')
 
   const allRows = useMemo(() => {
+    const fromWikiPages = wikiPages.map(wikiPageToRow)
     const fromContributions = contributions.map(toRow)
     const fromMock = MOCK_WIKI_PAGES.map(p => ({
       slug: p.slug,
@@ -49,8 +76,8 @@ export function WikiPageClient({ contributions = [] }: { contributions?: Contrib
       views: p.views,
       tags: p.tags ?? [],
     }))
-    return [...fromContributions, ...fromMock]
-  }, [contributions])
+    return [...fromWikiPages, ...fromContributions, ...fromMock]
+  }, [contributions, wikiPages])
 
   const filtered = useMemo(() => {
     return allRows.filter(row => {
