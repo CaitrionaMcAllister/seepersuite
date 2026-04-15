@@ -48,6 +48,18 @@ interface RecentContribution {
   description: string | null
 }
 
+interface WikiEditorPage {
+  id: string
+  slug: string
+  title: string
+  category: string | null
+  published: boolean
+  author_id: string | null
+  views: number
+  updated_at: string
+  profiles: { full_name: string | null; display_name: string | null } | { full_name: string | null; display_name: string | null }[] | null
+}
+
 interface AdminUser {
   id: string
   full_name: string | null
@@ -68,10 +80,11 @@ interface AdminPageClientProps {
   approvedContributions: WikiPost[]
   newsSources: NewsSource[]
   newsArticles: NewsArticle[]
+  wikiEditorPages: WikiEditorPage[]
   users: AdminUser[]
 }
 
-export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles, users }: AdminPageClientProps) {
+export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles, wikiEditorPages: initialWikiEditorPages, users }: AdminPageClientProps) {
   const [tab, setTab] = useState('Overview')
   const [digestLoading, setDigestLoading] = useState(false)
   const [digestMessage, setDigestMessage] = useState<string | null>(null)
@@ -205,10 +218,41 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
     } finally { setBlockingArticle(null) }
   }
 
-  // seeWiki post management
+  // seeWiki post management (contributions)
   const [wikiPosts, setWikiPosts] = useState<WikiPost[]>(initialWikiPosts)
   const [featuringWiki, setFeaturingWiki] = useState<string | null>(null)
   const [blockingWiki, setBlockingWiki] = useState<string | null>(null)
+
+  // wiki_pages (editor-published) management
+  const [wikiEditorPages, setWikiEditorPages] = useState<WikiEditorPage[]>(initialWikiEditorPages)
+  const [togglingPage, setTogglingPage] = useState<string | null>(null)
+  const [deletingPage, setDeletingPage] = useState<string | null>(null)
+
+  const handleTogglePublished = async (id: string, published: boolean) => {
+    setTogglingPage(id)
+    setWikiEditorPages(prev => prev.map(p => p.id === id ? { ...p, published } : p))
+    try {
+      await fetch('/api/admin/wiki', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, published }),
+      })
+    } catch {
+      setWikiEditorPages(prev => prev.map(p => p.id === id ? { ...p, published: !published } : p))
+    } finally { setTogglingPage(null) }
+  }
+
+  const handleDeletePage = async (id: string) => {
+    setDeletingPage(id)
+    try {
+      const res = await fetch('/api/admin/wiki', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (res.ok) setWikiEditorPages(prev => prev.filter(p => p.id !== id))
+    } finally { setDeletingPage(null) }
+  }
   const [deletingWiki, setDeletingWiki] = useState<string | null>(null)
 
   const handleFeatureWiki = async (id: string, is_featured: boolean) => {
@@ -571,6 +615,72 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Wiki editor pages */}
+          <div>
+            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
+              seeWiki pages — editor ({wikiEditorPages.filter(p => p.published).length} published
+              {wikiEditorPages.filter(p => !p.published).length > 0 && `, ${wikiEditorPages.filter(p => !p.published).length} unpublished`})
+            </h3>
+            {wikiEditorPages.length === 0 ? (
+              <div className="seeper-card p-8 text-center">
+                <p className="text-sm text-[var(--color-muted)]">No editor pages yet</p>
+              </div>
+            ) : (
+              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                {[...wikiEditorPages]
+                  .sort((a, b) => (a.published === b.published ? 0 : a.published ? -1 : 1))
+                  .map(p => {
+                    const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+                    const authorName = profile?.display_name ?? profile?.full_name ?? 'Unknown'
+                    return (
+                      <div
+                        key={p.id}
+                        className={cn(
+                          'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
+                          !p.published ? 'opacity-50 hover:opacity-70' : 'hover:bg-[var(--color-raised)]'
+                        )}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className={cn('text-xs font-medium truncate', !p.published && 'line-through')}>{p.title}</p>
+                            {p.published ? (
+                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
+                            ) : (
+                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Unpublished</span>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-[var(--color-muted)]">
+                            {authorName}{p.category ? ` · ${p.category}` : ''} · {p.views} views · {new Date(p.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleTogglePublished(p.id, !p.published)}
+                            disabled={togglingPage === p.id}
+                            className={cn(
+                              'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
+                              p.published
+                                ? 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                                : 'border-fern/40 text-fern hover:bg-fern/10'
+                            )}
+                          >
+                            {togglingPage === p.id ? '…' : p.published ? 'Unpublish' : 'Republish'}
+                          </button>
+                          <button
+                            onClick={() => handleDeletePage(p.id)}
+                            disabled={deletingPage === p.id}
+                            className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50"
+                          >
+                            {deletingPage === p.id ? '…' : 'Delete'}
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
               </div>
             )}
           </div>

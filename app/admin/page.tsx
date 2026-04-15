@@ -24,6 +24,7 @@ export default async function AdminPage() {
     { data: newsSources },
     { data: newsArticles },
     { data: profiles },
+    { data: wikiEditorPages },
     authUsersResult,
   ] = await Promise.all([
     serviceClient.from('profiles').select('*', { count: 'exact', head: true }),
@@ -35,6 +36,7 @@ export default async function AdminPage() {
     serviceClient.from('news_sources').select('*').order('created_at', { ascending: true }),
     serviceClient.from('news_cache').select('id, title, url, source, category, published_at, is_featured, is_blocked').order('published_at', { ascending: false }).limit(100),
     serviceClient.from('profiles').select('id, full_name, display_name, role, job_title, department, created_at').order('created_at', { ascending: true }),
+    serviceClient.from('wiki_pages').select('id, slug, title, category, published, author_id, views, updated_at, profiles!wiki_pages_author_id_fkey(full_name, display_name)').order('updated_at', { ascending: false }).limit(200),
     serviceClient.auth.admin.listUsers({ perPage: 1000 }),
   ])
 
@@ -60,6 +62,7 @@ export default async function AdminPage() {
         approvedContributions={approvedContributions ?? []}
         newsSources={newsSources ?? []}
         newsArticles={newsArticles ?? []}
+        wikiEditorPages={wikiEditorPages ?? []}
         users={users}
       />
     </AppShell>
