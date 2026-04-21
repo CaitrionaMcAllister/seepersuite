@@ -32,7 +32,7 @@ export default async function AdminPage() {
     serviceClient.from('news_cache').select('*', { count: 'exact', head: true }),
     serviceClient.from('contributions').select('*').eq('status', 'pending').order('submitted_at', { ascending: false }),
     serviceClient.from('contributions').select('id, title, category, submitter_name, submitted_at, is_featured, is_blocked').eq('status', 'approved').order('submitted_at', { ascending: false }).limit(100),
-    serviceClient.from('contributions').select('id, title, category, submitter_name, submitted_at, status, description').order('submitted_at', { ascending: false }).limit(20),
+    serviceClient.from('contributions').select('id, title, category, submitter_name, submitted_at, status, description').order('submitted_at', { ascending: false }).limit(50),
     serviceClient.from('news_sources').select('*').order('created_at', { ascending: true }),
     serviceClient.from('news_cache').select('id, title, url, source, category, published_at, is_featured, is_blocked').order('published_at', { ascending: false }).limit(100),
     serviceClient.from('profiles').select('id, full_name, display_name, role, job_title, department, created_at').order('created_at', { ascending: true }),

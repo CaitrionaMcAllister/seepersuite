@@ -92,13 +92,20 @@ export default async function DashboardPage() {
 
   // Fetch recent contributions for dashboard widgets
   const serviceClient = createServiceClient()
-  const { data: contributions } = await serviceClient
+  // Activity feed: all recent regardless of status (shows live team activity)
+  const { data: allRecentContributions } = await serviceClient
+    .from('contributions')
+    .select('id, submitter_name, title, category, submitted_at')
+    .order('submitted_at', { ascending: false })
+    .limit(8)
+  // Wiki updates: approved + visible only
+  const { data: approvedContributions } = await serviceClient
     .from('contributions')
     .select('id, submitter_name, title, category, submitted_at')
     .eq('status', 'approved')
     .eq('is_blocked', false)
     .order('submitted_at', { ascending: false })
-    .limit(8)
+    .limit(5)
 
   return (
     <AppShell profile={profile as Profile | null}>
@@ -119,12 +126,12 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
           {/* Left column */}
           <div className="flex flex-col gap-6">
-            <WikiUpdates contributions={contributions ?? []} />
+            <WikiUpdates contributions={approvedContributions ?? []} />
             <NewsletterPreview />
           </div>
 
           {/* Right column */}
-          <ActivityFeed contributions={contributions ?? []} />
+          <ActivityFeed contributions={allRecentContributions ?? []} />
         </div>
       </div>
     </AppShell>

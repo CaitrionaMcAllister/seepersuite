@@ -72,10 +72,33 @@ const ALL_QUESTIONS: Question[] = [
   { category: 'Industry',       q: 'What type of company is "Figma"?',                                           options: ['A 3D rendering studio', 'A collaborative UI/UX design platform', 'A project management tool', 'A generative AI service'], answer: 1 },
 ]
 
+function seededRandom(seed: number): () => number {
+  let s = seed
+  return () => {
+    s = (s * 1664525 + 1013904223) & 0xffffffff
+    return (s >>> 0) / 0xffffffff
+  }
+}
+
+function shuffleQuestion(q: Question, seed: number): Question {
+  const rand = seededRandom(seed)
+  const indices = [0, 1, 2, 3]
+  for (let i = 3; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]]
+  }
+  const shuffledOptions = indices.map(i => q.options[i])
+  const newAnswer = indices.indexOf(q.answer)
+  return { ...q, options: shuffledOptions, answer: newAnswer }
+}
+
 function pickQuestions(dayIndex: number): Question[] {
   const start = (dayIndex * 5) % ALL_QUESTIONS.length
   const result: Question[] = []
-  for (let i = 0; i < 5; i++) result.push(ALL_QUESTIONS[(start + i) % ALL_QUESTIONS.length])
+  for (let i = 0; i < 5; i++) {
+    const raw = ALL_QUESTIONS[(start + i) % ALL_QUESTIONS.length]
+    result.push(shuffleQuestion(raw, dayIndex * 100 + i))
+  }
   return result
 }
 
