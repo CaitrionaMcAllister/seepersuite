@@ -63,6 +63,7 @@ export default async function AdminPage() {
         newsSources={newsSources ?? []}
         newsArticles={newsArticles ?? []}
         wikiEditorPages={wikiEditorPages ?? []}
+        mockWikiPages={MOCK_WIKI_PAGES}
         users={users}
       />
     </AppShell>

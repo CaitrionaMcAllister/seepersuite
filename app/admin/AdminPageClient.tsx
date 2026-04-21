@@ -71,6 +71,15 @@ interface AdminUser {
   email: string
 }
 
+interface MockWikiPage {
+  slug: string
+  title: string
+  category: string
+  author: string
+  views: number
+  updatedAt: string
+}
+
 interface AdminPageClientProps {
   profile: Profile
   stats: { userCount: number; wikiCount: number; promptCount: number; newsCount: number; toolCount: number; resourceCount: number }
@@ -81,10 +90,11 @@ interface AdminPageClientProps {
   newsSources: NewsSource[]
   newsArticles: NewsArticle[]
   wikiEditorPages: WikiEditorPage[]
+  mockWikiPages: MockWikiPage[]
   users: AdminUser[]
 }
 
-export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles, wikiEditorPages: initialWikiEditorPages, users }: AdminPageClientProps) {
+export function AdminPageClient({ stats, recentContributions, pendingContributions, approvedContributions: initialWikiPosts, newsSources: initialSources, newsArticles: initialArticles, wikiEditorPages: initialWikiEditorPages, mockWikiPages, users }: AdminPageClientProps) {
   const [tab, setTab] = useState('Overview')
   const [digestLoading, setDigestLoading] = useState(false)
   const [digestMessage, setDigestMessage] = useState<string | null>(null)
@@ -532,105 +542,24 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
           )}
           </div>
 
-          {/* seeWiki posts */}
+          {/* seeWiki — all content combined */}
           <div>
-            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
-              seeWiki posts ({wikiPosts.filter(p => !p.is_blocked).length} visible
-              {wikiPosts.filter(p => p.is_blocked).length > 0 && `, ${wikiPosts.filter(p => p.is_blocked).length} blocked`})
-            </h3>
-            {wikiPosts.length === 0 ? (
+            {(() => {
+              const totalWiki = wikiEditorPages.length + wikiPosts.length + mockWikiPages.length
+              const liveCount = wikiEditorPages.filter(p => p.published).length + wikiPosts.filter(p => !p.is_blocked).length + mockWikiPages.length
+              return (
+                <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
+                  seeWiki ({liveCount} visible{totalWiki - liveCount > 0 ? `, ${totalWiki - liveCount} hidden` : ''} · {totalWiki} total)
+                </h3>
+              )
+            })()}
+            {wikiEditorPages.length === 0 && wikiPosts.length === 0 && mockWikiPages.length === 0 ? (
               <div className="seeper-card p-8 text-center">
-                <p className="text-sm text-[var(--color-muted)]">No approved posts yet</p>
+                <p className="text-sm text-[var(--color-muted)]">No wiki content yet</p>
               </div>
             ) : (
-              <div className="space-y-1 max-h-[400px] overflow-y-auto">
-                {[...wikiPosts]
-                  .sort((a, b) => {
-                    if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
-                    if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1
-                    return 0
-                  })
-                  .map(p => (
-                  <div
-                    key={p.id}
-                    className={cn(
-                      'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
-                      p.is_blocked
-                        ? 'opacity-40 hover:opacity-60'
-                        : p.is_featured
-                          ? 'bg-[var(--color-raised)]'
-                          : 'hover:bg-[var(--color-raised)]'
-                    )}
-                  >
-                    {/* Star / feature toggle */}
-                    <button
-                      onClick={() => !p.is_blocked && handleFeatureWiki(p.id, !p.is_featured)}
-                      disabled={featuringWiki === p.id || p.is_blocked}
-                      title={p.is_blocked ? 'Unblock to feature' : p.is_featured ? 'Remove from featured' : 'Feature this post'}
-                      className="flex-shrink-0 text-sm leading-none disabled:opacity-30 transition-opacity"
-                    >
-                      {featuringWiki === p.id ? (
-                        <span className="text-[var(--color-muted)]">…</span>
-                      ) : p.is_featured ? (
-                        <span style={{ color: '#EDDE5C' }}>★</span>
-                      ) : (
-                        <span className="opacity-30 group-hover:opacity-60 text-[var(--color-muted)]">☆</span>
-                      )}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className={cn('text-xs font-medium truncate', p.is_blocked && 'line-through')}>{p.title}</p>
-                        {p.is_featured && !p.is_blocked && (
-                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#ED693A' }}>Featured</span>
-                        )}
-                        {p.is_blocked && (
-                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-[var(--color-muted)]">
-                        {p.submitter_name}{p.category ? ` · ${p.category}` : ''}{p.submitted_at ? ` · ${new Date(p.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleBlockWiki(p.id, !p.is_blocked)}
-                        disabled={blockingWiki === p.id}
-                        title={p.is_blocked ? 'Unblock — show in seeWiki' : 'Block — hide from seeWiki'}
-                        className={cn(
-                          'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
-                          p.is_blocked
-                            ? 'border-fern/40 text-fern hover:bg-fern/10'
-                            : 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
-                        )}
-                      >
-                        {blockingWiki === p.id ? '…' : p.is_blocked ? 'Unblock' : 'Block'}
-                      </button>
-                      <button
-                        onClick={() => handleDeleteWiki(p.id)}
-                        disabled={deletingWiki === p.id}
-                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50"
-                      >
-                        {deletingWiki === p.id ? '…' : 'Delete'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Wiki editor pages */}
-          <div>
-            <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
-              seeWiki pages — editor ({wikiEditorPages.filter(p => p.published).length} published
-              {wikiEditorPages.filter(p => !p.published).length > 0 && `, ${wikiEditorPages.filter(p => !p.published).length} unpublished`})
-            </h3>
-            {wikiEditorPages.length === 0 ? (
-              <div className="seeper-card p-8 text-center">
-                <p className="text-sm text-[var(--color-muted)]">No editor pages yet</p>
-              </div>
-            ) : (
-              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+              <div className="space-y-1 max-h-[600px] overflow-y-auto">
+                {/* Editor pages */}
                 {[...wikiEditorPages]
                   .sort((a, b) => (a.published === b.published ? 0 : a.published ? -1 : 1))
                   .map(p => {
@@ -638,7 +567,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                     const authorName = profile?.display_name ?? profile?.full_name ?? 'Unknown'
                     return (
                       <div
-                        key={p.id}
+                        key={`editor-${p.id}`}
                         className={cn(
                           'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
                           !p.published ? 'opacity-50 hover:opacity-70' : 'hover:bg-[var(--color-raised)]'
@@ -646,6 +575,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">page</span>
                             <p className={cn('text-xs font-medium truncate', !p.published && 'line-through')}>{p.title}</p>
                             {p.published ? (
                               <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
@@ -681,6 +611,97 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                       </div>
                     )
                   })}
+
+                {/* User-submitted contributions */}
+                {[...wikiPosts]
+                  .sort((a, b) => {
+                    if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
+                    if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1
+                    return 0
+                  })
+                  .map(p => (
+                    <div
+                      key={`post-${p.id}`}
+                      className={cn(
+                        'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
+                        p.is_blocked
+                          ? 'opacity-40 hover:opacity-60'
+                          : p.is_featured
+                            ? 'bg-[var(--color-raised)]'
+                            : 'hover:bg-[var(--color-raised)]'
+                      )}
+                    >
+                      <button
+                        onClick={() => !p.is_blocked && handleFeatureWiki(p.id, !p.is_featured)}
+                        disabled={featuringWiki === p.id || p.is_blocked}
+                        title={p.is_blocked ? 'Unblock to feature' : p.is_featured ? 'Remove from featured' : 'Feature this post'}
+                        className="flex-shrink-0 text-sm leading-none disabled:opacity-30 transition-opacity"
+                      >
+                        {featuringWiki === p.id ? (
+                          <span className="text-[var(--color-muted)]">…</span>
+                        ) : p.is_featured ? (
+                          <span style={{ color: '#EDDE5C' }}>★</span>
+                        ) : (
+                          <span className="opacity-30 group-hover:opacity-60 text-[var(--color-muted)]">☆</span>
+                        )}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">post</span>
+                          <p className={cn('text-xs font-medium truncate', p.is_blocked && 'line-through')}>{p.title}</p>
+                          {p.is_featured && !p.is_blocked && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#ED693A' }}>Featured</span>
+                          )}
+                          {p.is_blocked && (
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-[var(--color-muted)]">
+                          {p.submitter_name}{p.category ? ` · ${p.category}` : ''}{p.submitted_at ? ` · ${new Date(p.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                          onClick={() => handleBlockWiki(p.id, !p.is_blocked)}
+                          disabled={blockingWiki === p.id}
+                          title={p.is_blocked ? 'Unblock — show in seeWiki' : 'Block — hide from seeWiki'}
+                          className={cn(
+                            'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
+                            p.is_blocked
+                              ? 'border-fern/40 text-fern hover:bg-fern/10'
+                              : 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
+                          )}
+                        >
+                          {blockingWiki === p.id ? '…' : p.is_blocked ? 'Unblock' : 'Block'}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteWiki(p.id)}
+                          disabled={deletingWiki === p.id}
+                          className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all disabled:opacity-50"
+                        >
+                          {deletingWiki === p.id ? '…' : 'Delete'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Placeholder / mock pages */}
+                {mockWikiPages.map(p => (
+                  <div
+                    key={`mock-${p.slug}`}
+                    className="flex items-center gap-3 py-2 px-3 rounded-lg opacity-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide" style={{ background: 'color-mix(in srgb, var(--color-quantum) 15%, transparent)', color: 'var(--color-quantum)' }}>placeholder</span>
+                        <p className="text-xs font-medium truncate">{p.title}</p>
+                      </div>
+                      <p className="text-[10px] text-[var(--color-muted)]">
+                        {p.author}{p.category ? ` · ${p.category}` : ''} · {p.views} views · static content
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
