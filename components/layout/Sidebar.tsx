@@ -116,7 +116,7 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         <Link href="/dashboard" className={cn('flex items-center gap-3 min-w-0', collapsed && 'justify-center')}>
           {/* Logo mark in branded circle */}
           <span className="logo-circle flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center">
-            <Image src="/logo.svg" alt="seeper" width={24} height={24} priority style={{ objectFit: 'contain' }} />
+            <Image src="/logo.svg" alt="seeper" width={28} height={28} priority style={{ objectFit: 'contain' }} />
           </span>
           {!collapsed && (
             <span className="font-display font-bold text-base tracking-tight text-seeper-white">seeper</span>
