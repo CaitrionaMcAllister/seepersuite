@@ -65,7 +65,7 @@ export default async function AdminPage() {
     ...wikiPageActivity,
   ].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).slice(0, 50)
 
-  const wikiCount = (contributionCount ?? 0) + MOCK_WIKI_PAGES.length
+  const wikiCount = (approvedContributions?.length ?? 0) + (wikiEditorPages?.filter(p => p.published).length ?? 0) + MOCK_WIKI_PAGES.length
   const promptCount = MOCK_PROMPTS.length
   const toolCount = MOCK_TOOLS.length
   const resourceCount = MOCK_RESOURCES.length
