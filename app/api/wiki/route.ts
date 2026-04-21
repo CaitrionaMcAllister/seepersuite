@@ -40,42 +40,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Title required to publish' }, { status: 400 })
   }
 
-  const baseSlug = (rawSlug || title || 'untitled')
-    .toLowerCase().trim()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '')
-    .replace(/-+/g, '-')
-    .slice(0, 80)
-
   const svc = createServiceClient()
-
-  // Check if this user already has a page with this slug (for upsert)
-  const { data: ownExisting } = await svc
-    .from('wiki_pages')
-    .select('id, slug')
-    .eq('author_id', user.id)
-    .eq('slug', baseSlug)
-    .maybeSingle()
-
-  let finalSlug = baseSlug
-  if (!ownExisting) {
-    // Check globally for collision and append suffix if needed
-    let suffix = 2
-    while (true) {
-      const { data: collision } = await svc
-        .from('wiki_pages').select('id').eq('slug', finalSlug).maybeSingle()
-      if (!collision) break
-      finalSlug = `${baseSlug}-${suffix++}`
-    }
-  } else {
-    finalSlug = ownExisting.slug
-  }
 
   const excerpt = body.excerpt ||
     (content ? content.replace(/<[^>]+>/g, '').slice(0, 200) : null)
 
-  const { data, error } = await supabase.from('wiki_pages').upsert({
-    slug: finalSlug,
+  const payload = {
     title: title?.trim() || 'Untitled',
     content,
     content_json,
@@ -86,7 +56,41 @@ export async function POST(req: NextRequest) {
     table_of_contents,
     author_id: user.id,
     last_edited_by: user.id,
-  }, { onConflict: 'slug' }).select('id, slug').single()
+  }
+
+  if (rawSlug) {
+    // Continuation of an existing page — update by slug
+    const { data, error } = await supabase
+      .from('wiki_pages')
+      .upsert({ slug: rawSlug, ...payload }, { onConflict: 'slug' })
+      .select('id, slug')
+      .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json(data)
+  }
+
+  // New page — always INSERT with a fresh deduplicated slug
+  const baseSlug = (title || 'untitled')
+    .toLowerCase().trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, 80)
+
+  let finalSlug = baseSlug
+  let suffix = 2
+  while (true) {
+    const { data: collision } = await svc
+      .from('wiki_pages').select('id').eq('slug', finalSlug).maybeSingle()
+    if (!collision) break
+    finalSlug = `${baseSlug}-${suffix++}`
+  }
+
+  const { data, error } = await supabase
+    .from('wiki_pages')
+    .insert({ slug: finalSlug, ...payload })
+    .select('id, slug')
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
