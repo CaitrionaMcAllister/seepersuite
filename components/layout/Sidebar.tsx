@@ -1,5 +1,6 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
@@ -107,32 +108,16 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
         collapsed ? 'w-[60px]' : 'w-[240px]'
       )}
     >
-      {/* Header — Change 8: new logo SVG + link wrapper */}
+      {/* Header — logo */}
       <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center gap-2.5 min-w-0">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-cta)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
-                <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="var(--color-cta)"/>
-              </svg>
-            </div>
-            <div className="min-w-0">
-              <div className="font-display font-light text-seeper-white" style={{ fontSize: 15 }}>seeper</div>
-              <div className="text-quantum font-display" style={{ fontSize: 9 }}>wiki</div>
-            </div>
+          <Link href="/dashboard" className="flex items-center min-w-0">
+            <Image src="/logo.svg" alt="seeper" width={120} height={36} priority style={{ objectFit: 'contain', maxHeight: 36 }} />
           </Link>
         )}
         {collapsed && (
           <Link href="/dashboard" className="mx-auto">
-            <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--color-cta)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" stroke="white" strokeWidth="1.2"/>
-                <path d="M5 4.5C5 4.5 11 4.5 11 8C11 11.5 5 11.5 5 11.5V4.5Z" fill="white"/>
-                <circle cx="8" cy="8" r="2.2" fill="var(--color-cta)"/>
-              </svg>
-            </div>
+            <Image src="/logo.svg" alt="seeper" width={32} height={32} priority style={{ objectFit: 'contain', maxHeight: 32 }} />
           </Link>
         )}
         <button
