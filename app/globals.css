@@ -109,6 +109,10 @@ html.light .seeper-card-raised {
 /* Section labels */
 html.light .section-label { color: #6a6a6a !important; }
 
+/* Sidebar logo circle */
+.logo-circle { background-color: #ED693A; }
+html.light .logo-circle { background-color: #c85020; }
+
 /* Input / select / textarea */
 html.light input,
 html.light textarea,

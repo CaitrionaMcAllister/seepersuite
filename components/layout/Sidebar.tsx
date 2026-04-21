@@ -109,27 +109,37 @@ export default function Sidebar({ profile, onSignOut }: SidebarProps) {
       )}
     >
       {/* Header — logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-seeper-border">
+      <div className={cn(
+        'flex items-center border-b border-seeper-border px-3 py-4',
+        collapsed ? 'justify-center' : 'justify-between gap-2'
+      )}>
+        <Link href="/dashboard" className={cn('flex items-center gap-3 min-w-0', collapsed && 'justify-center')}>
+          {/* Logo mark in branded circle */}
+          <span className="logo-circle flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center">
+            <Image src="/logo.svg" alt="seeper" width={20} height={20} priority style={{ objectFit: 'contain' }} />
+          </span>
+          {!collapsed && (
+            <span className="font-display font-bold text-base tracking-tight text-seeper-white">seeper</span>
+          )}
+        </Link>
         {!collapsed && (
-          <Link href="/dashboard" className="flex items-center min-w-0">
-            <Image src="/logo.svg" alt="seeper" width={120} height={36} priority style={{ objectFit: 'contain', maxHeight: 36 }} />
-          </Link>
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="text-seeper-muted hover:text-seeper-white transition-colors flex-shrink-0"
+            aria-label="Collapse sidebar"
+          >
+            <ChevronLeft size={16} />
+          </button>
         )}
         {collapsed && (
-          <Link href="/dashboard" className="mx-auto">
-            <Image src="/logo.svg" alt="seeper" width={32} height={32} priority style={{ objectFit: 'contain', maxHeight: 32 }} />
-          </Link>
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="absolute right-0 top-[52px] -mr-3 w-6 h-6 rounded-full bg-seeper-surface border border-seeper-border flex items-center justify-center text-seeper-muted hover:text-seeper-white transition-colors"
+            aria-label="Expand sidebar"
+          >
+            <ChevronRight size={12} />
+          </button>
         )}
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className={cn(
-            'text-seeper-muted hover:text-seeper-white transition-colors ml-auto',
-            collapsed && 'mx-auto'
-          )}
-          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
       </div>
 
       {/* Navigation */}
