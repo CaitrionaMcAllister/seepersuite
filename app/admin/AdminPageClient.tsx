@@ -230,8 +230,8 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
 
   // seeWiki post management (contributions)
   const [wikiPosts, setWikiPosts] = useState<WikiPost[]>(initialWikiPosts)
-  const [featuringWiki, setFeaturingWiki] = useState<string | null>(null)
   const [blockingWiki, setBlockingWiki] = useState<string | null>(null)
+  const [hiddenMockSlugs, setHiddenMockSlugs] = useState<Set<string>>(new Set())
 
   // wiki_pages (editor-published) management
   const [wikiEditorPages, setWikiEditorPages] = useState<WikiEditorPage[]>(initialWikiEditorPages)
@@ -264,20 +264,6 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
     } finally { setDeletingPage(null) }
   }
   const [deletingWiki, setDeletingWiki] = useState<string | null>(null)
-
-  const handleFeatureWiki = async (id: string, is_featured: boolean) => {
-    setFeaturingWiki(id)
-    setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_featured } : p))
-    try {
-      await fetch('/api/admin/contributions', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, is_featured }),
-      })
-    } catch {
-      setWikiPosts(prev => prev.map(p => p.id === id ? { ...p, is_featured: !is_featured } : p))
-    } finally { setFeaturingWiki(null) }
-  }
 
   const handleBlockWiki = async (id: string, is_blocked: boolean) => {
     setBlockingWiki(id)
@@ -545,8 +531,9 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
           {/* seeWiki — all content combined */}
           <div>
             {(() => {
-              const totalWiki = wikiEditorPages.length + wikiPosts.length + mockWikiPages.length
-              const liveCount = wikiEditorPages.filter(p => p.published).length + wikiPosts.filter(p => !p.is_blocked).length + mockWikiPages.length
+              const visibleMocks = mockWikiPages.filter(p => !hiddenMockSlugs.has(p.slug))
+              const totalWiki = wikiEditorPages.length + wikiPosts.length + visibleMocks.length
+              const liveCount = wikiEditorPages.filter(p => p.published).length + wikiPosts.filter(p => !p.is_blocked).length + visibleMocks.length
               return (
                 <h3 className="text-xs font-bold text-[var(--color-muted)] uppercase tracking-wider mb-3">
                   seeWiki ({liveCount} visible{totalWiki - liveCount > 0 ? `, ${totalWiki - liveCount} hidden` : ''} · {totalWiki} total)
@@ -616,7 +603,6 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                 {[...wikiPosts]
                   .sort((a, b) => {
                     if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
-                    if (a.is_featured !== b.is_featured) return b.is_featured ? 1 : -1
                     return 0
                   })
                   .map(p => (
@@ -624,34 +610,13 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                       key={`post-${p.id}`}
                       className={cn(
                         'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
-                        p.is_blocked
-                          ? 'opacity-40 hover:opacity-60'
-                          : p.is_featured
-                            ? 'bg-[var(--color-raised)]'
-                            : 'hover:bg-[var(--color-raised)]'
+                        p.is_blocked ? 'opacity-40 hover:opacity-60' : 'hover:bg-[var(--color-raised)]'
                       )}
                     >
-                      <button
-                        onClick={() => !p.is_blocked && handleFeatureWiki(p.id, !p.is_featured)}
-                        disabled={featuringWiki === p.id || p.is_blocked}
-                        title={p.is_blocked ? 'Unblock to feature' : p.is_featured ? 'Remove from featured' : 'Feature this post'}
-                        className="flex-shrink-0 text-sm leading-none disabled:opacity-30 transition-opacity"
-                      >
-                        {featuringWiki === p.id ? (
-                          <span className="text-[var(--color-muted)]">…</span>
-                        ) : p.is_featured ? (
-                          <span style={{ color: '#EDDE5C' }}>★</span>
-                        ) : (
-                          <span className="opacity-30 group-hover:opacity-60 text-[var(--color-muted)]">☆</span>
-                        )}
-                      </button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">post</span>
                           <p className={cn('text-xs font-medium truncate', p.is_blocked && 'line-through')}>{p.title}</p>
-                          {p.is_featured && !p.is_blocked && (
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white" style={{ background: '#ED693A' }}>Featured</span>
-                          )}
                           {p.is_blocked && (
                             <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
                           )}
@@ -686,10 +651,10 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                   ))}
 
                 {/* Placeholder / mock pages */}
-                {mockWikiPages.map(p => (
+                {mockWikiPages.filter(p => !hiddenMockSlugs.has(p.slug)).map(p => (
                   <div
                     key={`mock-${p.slug}`}
-                    className="flex items-center gap-3 py-2 px-3 rounded-lg opacity-50"
+                    className="flex items-center gap-3 py-2 px-3 rounded-lg group hover:bg-[var(--color-raised)] transition-colors opacity-60 hover:opacity-80"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
@@ -700,6 +665,12 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                         {p.author}{p.category ? ` · ${p.category}` : ''} · {p.views} views · static content
                       </p>
                     </div>
+                    <button
+                      onClick={() => setHiddenMockSlugs(prev => { const next = new Set(prev); next.add(p.slug); return next })}
+                      className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all"
+                    >
+                      Delete
+                    </button>
                   </div>
                 ))}
               </div>
