@@ -551,7 +551,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                   .sort((a, b) => (a.published === b.published ? 0 : a.published ? -1 : 1))
                   .map(p => {
                     const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
-                    const authorName = profile?.display_name ?? profile?.full_name ?? 'Unknown'
+                    const authorName = profile?.display_name ?? profile?.full_name ?? '—'
                     return (
                       <div
                         key={`editor-${p.id}`}
@@ -562,13 +562,12 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">page</span>
+                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">post</span>
                             <p className={cn('text-xs font-medium truncate', !p.published && 'line-through')}>{p.title}</p>
-                            {p.published ? (
-                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
-                            ) : (
-                              <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Unpublished</span>
-                            )}
+                            {p.published
+                              ? <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
+                              : <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Unpublished</span>
+                            }
                           </div>
                           <p className="text-[10px] text-[var(--color-muted)]">
                             {authorName}{p.category ? ` · ${p.category}` : ''} · {p.views} views · {new Date(p.updated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
@@ -601,35 +600,32 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
 
                 {/* User-submitted contributions */}
                 {[...wikiPosts]
-                  .sort((a, b) => {
-                    if (a.is_blocked !== b.is_blocked) return a.is_blocked ? 1 : -1
-                    return 0
-                  })
+                  .sort((a, b) => (a.is_blocked === b.is_blocked ? 0 : a.is_blocked ? 1 : -1))
                   .map(p => (
                     <div
                       key={`post-${p.id}`}
                       className={cn(
                         'flex items-center gap-3 py-2 px-3 rounded-lg group transition-colors',
-                        p.is_blocked ? 'opacity-40 hover:opacity-60' : 'hover:bg-[var(--color-raised)]'
+                        p.is_blocked ? 'opacity-50 hover:opacity-70' : 'hover:bg-[var(--color-raised)]'
                       )}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide bg-[var(--color-raised)] text-[var(--color-muted)]">post</span>
                           <p className={cn('text-xs font-medium truncate', p.is_blocked && 'line-through')}>{p.title}</p>
-                          {p.is_blocked && (
-                            <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Blocked</span>
-                          )}
+                          {!p.is_blocked
+                            ? <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
+                            : <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--color-raised)] text-[var(--color-muted)]">Unpublished</span>
+                          }
                         </div>
                         <p className="text-[10px] text-[var(--color-muted)]">
-                          {p.submitter_name}{p.category ? ` · ${p.category}` : ''}{p.submitted_at ? ` · ${new Date(p.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
+                          {p.submitter_name || '—'}{p.category ? ` · ${p.category}` : ''} · — views{p.submitted_at ? ` · ${new Date(p.submitted_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                           onClick={() => handleBlockWiki(p.id, !p.is_blocked)}
                           disabled={blockingWiki === p.id}
-                          title={p.is_blocked ? 'Unblock — show in seeWiki' : 'Block — hide from seeWiki'}
                           className={cn(
                             'px-2.5 py-1 rounded-full border text-[10px] transition-all disabled:opacity-50',
                             p.is_blocked
@@ -637,7 +633,7 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                               : 'opacity-0 group-hover:opacity-100 border-amber-500/30 text-amber-400 hover:bg-amber-500/10'
                           )}
                         >
-                          {blockingWiki === p.id ? '…' : p.is_blocked ? 'Unblock' : 'Block'}
+                          {blockingWiki === p.id ? '…' : p.is_blocked ? 'Republish' : 'Unpublish'}
                         </button>
                         <button
                           onClick={() => handleDeleteWiki(p.id)}
@@ -650,27 +646,36 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                     </div>
                   ))}
 
-                {/* Placeholder / mock pages */}
+                {/* Placeholder / mock pages — always live, session-only delete */}
                 {mockWikiPages.filter(p => !hiddenMockSlugs.has(p.slug)).map(p => (
                   <div
                     key={`mock-${p.slug}`}
-                    className="flex items-center gap-3 py-2 px-3 rounded-lg group hover:bg-[var(--color-raised)] transition-colors opacity-60 hover:opacity-80"
+                    className="flex items-center gap-3 py-2 px-3 rounded-lg group hover:bg-[var(--color-raised)] transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide" style={{ background: 'color-mix(in srgb, var(--color-quantum) 15%, transparent)', color: 'var(--color-quantum)' }}>placeholder</span>
                         <p className="text-xs font-medium truncate">{p.title}</p>
+                        <span className="flex-shrink-0 px-1.5 py-0.5 rounded-full text-[9px] font-bold" style={{ background: 'color-mix(in srgb, var(--color-fern) 15%, transparent)', color: 'var(--color-fern)' }}>Live</span>
                       </div>
                       <p className="text-[10px] text-[var(--color-muted)]">
-                        {p.author}{p.category ? ` · ${p.category}` : ''} · {p.views} views · static content
+                        {p.author}{p.category ? ` · ${p.category}` : ''} · {p.views} views · {new Date(p.updatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </p>
                     </div>
-                    <button
-                      onClick={() => setHiddenMockSlugs(prev => { const next = new Set(prev); next.add(p.slug); return next })}
-                      className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => setHiddenMockSlugs(prev => { const next = new Set(prev); next.add(p.slug); return next })}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-amber-500/30 text-amber-400 text-[10px] hover:bg-amber-500/10 transition-all"
+                      >
+                        Unpublish
+                      </button>
+                      <button
+                        onClick={() => setHiddenMockSlugs(prev => { const next = new Set(prev); next.add(p.slug); return next })}
+                        className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-full border border-red-500/30 text-red-400 text-[10px] hover:bg-red-500/10 transition-all"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
