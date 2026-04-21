@@ -5,17 +5,6 @@ import { useToast } from '@/hooks/useToast'
 import { cn } from '@/lib/utils'
 
 const SECTIONS: Record<string, { label: string; color: string; categories: { id: string; label: string; color: string }[] }> = {
-  seeWiki: {
-    label: 'seeWiki', color: '#B0A9CF',
-    categories: [
-      { id: 'creative',   label: 'Creative',   color: '#ED693A' },
-      { id: 'production', label: 'Production', color: '#B0A9CF' },
-      { id: 'tech',       label: 'Tech',       color: '#DCFEAD' },
-      { id: 'business',   label: 'Business',   color: '#EDDE5C' },
-      { id: 'ai',         label: 'AI',         color: '#8ACB8F' },
-      { id: 'general',    label: 'General',    color: '#C3C3C3' },
-    ],
-  },
   seeNews: {
     label: 'seeNews', color: '#ED693A',
     categories: [
@@ -73,7 +62,7 @@ const SECTIONS: Record<string, { label: string; color: string; categories: { id:
   },
 }
 
-const SECTION_ORDER = ['seeWiki', 'seeNews', 'seeTools', 'seeResources', 'seePrompts', 'seeInside']
+const SECTION_ORDER = ['seeNews', 'seeTools', 'seeResources', 'seePrompts', 'seeInside']
 
 const PRESET_TAGS = [
   '#ai','#creative','#production','#tech','#business',
@@ -92,7 +81,7 @@ export function ContributeDrawer({ open, onClose, authorName = '', defaultSectio
   const { toast } = useToast()
   const [name, setName] = useState(authorName)
   const [title, setTitle] = useState('')
-  const [section, setSection] = useState(defaultSection ?? 'seeWiki')
+  const [section, setSection] = useState(defaultSection ?? 'seeNews')
   const [category, setCategory] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [customTag, setCustomTag] = useState('')
@@ -108,7 +97,7 @@ export function ContributeDrawer({ open, onClose, authorName = '', defaultSectio
     if (defaultSection && !open) setSection(defaultSection)
   }, [defaultSection, open])
 
-  const activeSection = SECTIONS[section] ?? SECTIONS.seeWiki
+  const activeSection = SECTIONS[section] ?? SECTIONS.seeNews
   const sectionColor = activeSection.color
   const categories = activeSection.categories
 
