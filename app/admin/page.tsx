@@ -16,7 +16,7 @@ export default async function AdminPage() {
   const serviceClient = createServiceClient()
   const [
     { count: userCount },
-    { count: _contributionCount },
+    {},
     { count: newsCount },
     { data: pendingContributions },
     { data: approvedContributions },
