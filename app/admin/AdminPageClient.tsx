@@ -385,8 +385,8 @@ export function AdminPageClient({ stats, recentContributions, pendingContributio
                         <span
                           className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider flex-shrink-0"
                           style={{
-                            color: c.status === 'pending' ? '#ED693A' : c.status === 'approved' ? '#8ACB8F' : '#555',
-                            background: c.status === 'pending' ? 'rgba(237,105,58,0.15)' : c.status === 'approved' ? 'rgba(138,203,143,0.15)' : 'rgba(85,85,85,0.15)',
+                            color: c.status === 'pending' ? '#ED693A' : (c.status === 'approved' || c.status === 'published') ? '#8ACB8F' : '#555',
+                            background: c.status === 'pending' ? 'rgba(237,105,58,0.15)' : (c.status === 'approved' || c.status === 'published') ? 'rgba(138,203,143,0.15)' : 'rgba(85,85,85,0.15)',
                           }}
                         >
                           {c.status}

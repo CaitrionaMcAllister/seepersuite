@@ -47,6 +47,24 @@ export default async function AdminPage() {
   }
   const users = (profiles ?? []).map(p => ({ ...p, email: emailMap[p.id] ?? '' }))
 
+  // Merge contributions + wiki_pages into a single recent activity feed
+  const wikiPageActivity = (wikiEditorPages ?? []).map(p => {
+    const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+    return {
+      id: p.id,
+      title: p.title,
+      category: p.category ?? 'general',
+      submitter_name: profile?.display_name ?? profile?.full_name ?? 'Unknown',
+      submitted_at: p.updated_at,
+      status: p.published ? 'published' : 'draft',
+      description: null as string | null,
+    }
+  })
+  const mergedRecent = [
+    ...(recentContributions ?? []),
+    ...wikiPageActivity,
+  ].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).slice(0, 50)
+
   const wikiCount = (contributionCount ?? 0) + MOCK_WIKI_PAGES.length
   const promptCount = MOCK_PROMPTS.length
   const toolCount = MOCK_TOOLS.length
@@ -57,7 +75,7 @@ export default async function AdminPage() {
       <AdminPageClient
         profile={profile as Profile}
         stats={{ userCount: userCount ?? 0, wikiCount, promptCount, newsCount: newsCount ?? 0, toolCount, resourceCount }}
-        recentContributions={recentContributions ?? []}
+        recentContributions={mergedRecent}
         pendingContributions={pendingContributions ?? []}
         approvedContributions={approvedContributions ?? []}
         newsSources={newsSources ?? []}
