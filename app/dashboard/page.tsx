@@ -92,20 +92,65 @@ export default async function DashboardPage() {
 
   // Fetch recent contributions for dashboard widgets
   const serviceClient = createServiceClient()
-  // Activity feed: all recent regardless of status (shows live team activity)
-  const { data: allRecentContributions } = await serviceClient
-    .from('contributions')
-    .select('id, submitter_name, title, category, submitted_at')
-    .order('submitted_at', { ascending: false })
-    .limit(8)
-  // Wiki updates: approved + visible only
-  const { data: approvedContributions } = await serviceClient
-    .from('contributions')
-    .select('id, submitter_name, title, category, submitted_at')
-    .eq('status', 'approved')
-    .eq('is_blocked', false)
-    .order('submitted_at', { ascending: false })
-    .limit(5)
+
+  const [
+    { data: recentContributions },
+    { data: approvedContributions },
+    { data: recentWikiPages },
+  ] = await Promise.all([
+    // Activity feed — all contributions regardless of status
+    serviceClient
+      .from('contributions')
+      .select('id, submitter_name, title, category, submitted_at')
+      .order('submitted_at', { ascending: false })
+      .limit(8),
+    // Wiki updates — approved contributions only
+    serviceClient
+      .from('contributions')
+      .select('id, submitter_name, title, category, submitted_at')
+      .eq('status', 'approved')
+      .eq('is_blocked', false)
+      .order('submitted_at', { ascending: false })
+      .limit(5),
+    // Wiki editor pages — published
+    serviceClient
+      .from('wiki_pages')
+      .select('id, title, category, updated_at, profiles!wiki_pages_author_id_fkey(full_name, display_name)')
+      .eq('published', true)
+      .order('updated_at', { ascending: false })
+      .limit(8),
+  ])
+
+  // Normalise wiki_pages to the same shape as contributions
+  type FeedItem = { id: string; submitter_name: string; title: string; category: string; submitted_at: string; action?: string }
+
+  const wikiPageItems: FeedItem[] = (recentWikiPages ?? []).map(p => {
+    const prof = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+    return {
+      id: p.id,
+      submitter_name: (prof as { display_name?: string; full_name?: string } | null)?.display_name
+        ?? (prof as { display_name?: string; full_name?: string } | null)?.full_name
+        ?? 'Unknown',
+      title: p.title,
+      category: p.category ?? 'general',
+      submitted_at: p.updated_at,
+      action: 'published a page to seeWiki',
+    }
+  })
+
+  const wikiPageItemsForUpdates: FeedItem[] = wikiPageItems.slice(0, 5)
+
+  // Merge + sort for WikiUpdates (approved contributions + published wiki pages)
+  const allWikiUpdates: FeedItem[] = [
+    ...(approvedContributions ?? []),
+    ...wikiPageItemsForUpdates,
+  ].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).slice(0, 5)
+
+  // Merge + sort for ActivityFeed
+  const allRecentContributions: FeedItem[] = [
+    ...(recentContributions ?? []).map(c => ({ ...c, action: 'submitted a contribution to' })),
+    ...wikiPageItems,
+  ].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()).slice(0, 8)
 
   return (
     <AppShell profile={profile as Profile | null}>
@@ -126,7 +171,7 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[65fr_35fr] gap-6">
           {/* Left column */}
           <div className="flex flex-col gap-6">
-            <WikiUpdates contributions={approvedContributions ?? []} />
+            <WikiUpdates contributions={allWikiUpdates} />
             <NewsletterPreview />
           </div>
 

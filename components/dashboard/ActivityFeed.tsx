@@ -7,6 +7,7 @@ interface Contribution {
   title: string
   category: string
   submitted_at: string
+  action?: string
 }
 
 function timeAgo(iso: string): string {
@@ -28,7 +29,7 @@ export default function ActivityFeed({ contributions = [] }: { contributions?: C
     ? contributions.map(c => ({
         initials: initials(c.submitter_name),
         name: c.submitter_name,
-        action: 'submitted a contribution to',
+        action: c.action ?? 'submitted a contribution to',
         title: c.title,
         time: timeAgo(c.submitted_at),
       }))
